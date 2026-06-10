@@ -1,19 +1,28 @@
-<div class="aw-banner-ad">
-  <div class="aw-badge">A.W. ROADSIDE</div>
+<a href="./Aw-car_ad.html" class="aw-banner-link" aria-label="Open A.W. Roadside full page ad">
+  <div class="aw-banner-ad">
+    <div class="aw-badge">A.W. ROADSIDE</div>
 
-  <div class="aw-copy">
-    <h2>WE BUY CARS</h2>
-    <p>Whole cars or parts cars wanted</p>
-    <strong>2020 & newer • Up to $3,500</strong>
-    <small>Purchase not guaranteed until physical inspection.</small>
+    <div class="aw-copy">
+      <h2>WE BUY CARS</h2>
+      <p>Whole cars or parts cars wanted</p>
+      <strong>2020 &amp; newer • Up to $3,500</strong>
+      <small>Purchase not guaranteed until physical inspection.</small>
+    </div>
+
+    <div class="aw-car">🚗 🚙</div>
+
+    <span class="aw-cta">Call / Text 609-859-6180</span>
   </div>
-
-  <div class="aw-car">🚗 🚙</div>
-
-  <a href="tel:16098596180" class="aw-cta">Call / Text 609-859-6180</a>
-</div>
+</a>
 
 <style>
+.aw-banner-link {
+  display: block;
+  width: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
 .aw-banner-ad {
   width: 100%;
   max-width: 728px;
@@ -28,6 +37,7 @@
   gap: 18px;
   color: #000;
   box-shadow: 0 4px 14px rgba(0,0,0,.25);
+  cursor: pointer;
 }
 
 .aw-badge {
@@ -74,7 +84,6 @@
   margin-left: auto;
   background: #008cff;
   color: #000;
-  text-decoration: none;
   font-weight: 900;
   padding: 12px 14px;
   border: 3px solid #000;
