@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytics — AdLaunch</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="container nav-inner">
+      <a href="index.html" class="nav-logo">📢 AdLaunch</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="campaigns.html">Campaigns</a></li>
+        <li><a href="analytics.html" class="active">Analytics</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h2>Analytics</h2>
+          <p class="page-subtitle">Performance summary across all active campaigns.</p>
+        </div>
+        <div style="display:flex; gap:.75rem; flex-wrap:wrap; align-items:flex-end;">
+          <select style="width:auto; padding:.5rem .8rem; font-size:.875rem; border-radius:var(--radius); border:1px solid var(--border);">
+            <option>Last 7 days</option>
+            <option selected>Last 30 days</option>
+            <option>Last 90 days</option>
+            <option>This year</option>
+          </select>
+          <button class="btn btn-outline" type="button">Export CSV</button>
+        </div>
+      </div>
+
+      <!-- KPI Summary -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Impressions</div>
+          <div class="stat-value">1.4M</div>
+          <div class="stat-change up">↑ 8% vs prior period</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Clicks</div>
+          <div class="stat-value">44,800</div>
+          <div class="stat-change up">↑ 11%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg. CTR</div>
+          <div class="stat-value">3.2%</div>
+          <div class="stat-change up">↑ 0.4 pts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Conversions</div>
+          <div class="stat-value">3,584</div>
+          <div class="stat-change up">↑ 14%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Conversion Rate</div>
+          <div class="stat-value">8.0%</div>
+          <div class="stat-change up">↑ 0.7 pts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Spend</div>
+          <div class="stat-value">$24,600</div>
+          <div class="stat-change down">↓ 2% vs budget</div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-top:1.5rem;" class="charts-grid">
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Impressions &amp; Clicks</span>
+          </div>
+          <div class="chart-placeholder">
+            📈 &nbsp;Line chart — daily impressions vs clicks
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Spend by Channel</span>
+          </div>
+          <div class="chart-placeholder">
+            🍩 &nbsp;Donut chart — spend distribution by channel
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CTR over time -->
+      <div class="card mt-3">
+        <div class="card-header">
+          <span class="card-title">Click-Through Rate Over Time</span>
+        </div>
+        <div class="chart-placeholder" style="height:180px;">
+          📊 &nbsp;Bar chart — daily CTR
+        </div>
+      </div>
+
+      <!-- Per-campaign breakdown table -->
+      <div class="card mt-3">
+        <div class="card-header">
+          <span class="card-title">Campaign Breakdown</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Channel</th>
+                <th>Impressions</th>
+                <th>Clicks</th>
+                <th>CTR</th>
+                <th>Conversions</th>
+                <th>Spend</th>
+                <th>CPC</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><a href="campaign-detail.html">Summer Sale 2026</a></td>
+                <td>Display &amp; Social</td>
+                <td>420,000</td>
+                <td>13,440</td>
+                <td>3.2%</td>
+                <td>1,056</td>
+                <td>$3,200</td>
+                <td>$0.24</td>
+                <td><span class="badge badge-active">Active</span></td>
+              </tr>
+              <tr>
+                <td><a href="campaign-detail.html">Brand Awareness Q3</a></td>
+                <td>Video</td>
+                <td>310,000</td>
+                <td>8,060</td>
+                <td>2.6%</td>
+                <td>484</td>
+                <td>$1,500</td>
+                <td>$0.19</td>
+                <td><span class="badge badge-active">Active</span></td>
+              </tr>
+              <tr>
+                <td><a href="campaign-detail.html">Product Launch — Pro Plan</a></td>
+                <td>Search</td>
+                <td>180,000</td>
+                <td>10,800</td>
+                <td>6.0%</td>
+                <td>1,080</td>
+                <td>$3,500</td>
+                <td>$0.32</td>
+                <td><span class="badge badge-paused">Paused</span></td>
+              </tr>
+              <tr>
+                <td><a href="campaign-detail.html">Retargeting Wave 1</a></td>
+                <td>Display</td>
+                <td>290,000</td>
+                <td>8,700</td>
+                <td>3.0%</td>
+                <td>696</td>
+                <td>$1,980</td>
+                <td>$0.23</td>
+                <td><span class="badge badge-ended">Ended</span></td>
+              </tr>
+              <tr>
+                <td><a href="campaign-detail.html">Newsletter Sign-Up Drive</a></td>
+                <td>Social</td>
+                <td>200,000</td>
+                <td>3,800</td>
+                <td>1.9%</td>
+                <td>268</td>
+                <td>$410</td>
+                <td>$0.11</td>
+                <td><span class="badge badge-active">Active</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Top performing ads -->
+      <div class="card mt-3">
+        <div class="card-header">
+          <span class="card-title">Top Performing Creatives</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Creative</th>
+                <th>Campaign</th>
+                <th>Format</th>
+                <th>Impressions</th>
+                <th>Clicks</th>
+                <th>CTR</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Social Card — Sale 50%</strong></td>
+                <td>Summer Sale 2026</td>
+                <td>Image Post</td>
+                <td>185,000</td>
+                <td>6,845</td>
+                <td><strong>3.7%</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Search Ad — Pro Plan CTA</strong></td>
+                <td>Product Launch</td>
+                <td>Text Ad</td>
+                <td>180,000</td>
+                <td>10,800</td>
+                <td><strong>6.0%</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Banner 728×90 — Summer</strong></td>
+                <td>Summer Sale 2026</td>
+                <td>Banner</td>
+                <td>210,000</td>
+                <td>5,880</td>
+                <td><strong>2.8%</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-inner">
+      <span>© 2026 AdLaunch. All rights reserved.</span>
+      <span>
+        <a href="index.html">Home</a> &middot;
+        <a href="campaigns.html">Campaigns</a> &middot;
+        <a href="analytics.html">Analytics</a> &middot;
+        <a href="contact.html">Contact</a>
+      </span>
+    </div>
+  </footer>
+
+  <style>
+    @media (max-width: 700px) {
+      .charts-grid { grid-template-columns: 1fr !important; }
+    }
+  </style>
+
+</body>
+</html>
