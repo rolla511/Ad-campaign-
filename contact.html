@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — AdLaunch</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="container nav-inner">
+      <a href="index.html" class="nav-logo">📢 AdLaunch</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="campaigns.html">Campaigns</a></li>
+        <li><a href="analytics.html">Analytics</a></li>
+        <li><a href="contact.html" class="active">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h2>Contact Us</h2>
+          <p class="page-subtitle">Get in touch with the AdLaunch team.</p>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1.4fr; gap:1.5rem;" class="contact-grid">
+
+        <!-- About / Info -->
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">About AdLaunch</span>
+            </div>
+            <p class="text-sm" style="line-height:1.7; margin-bottom:1rem;">
+              AdLaunch is an ad campaign management platform that helps marketing teams
+              plan, launch, and measure advertising campaigns across all major digital
+              channels — including Search, Display, Social, Video, and Email.
+            </p>
+            <p class="text-sm" style="line-height:1.7;">
+              Our goal is to make ad deployment simple, fast, and data-driven so that
+              every campaign reaches the right audience and delivers measurable results.
+            </p>
+          </div>
+
+          <div class="card mt-2">
+            <div class="card-header">
+              <span class="card-title">Contact Information</span>
+            </div>
+            <ul style="list-style:none; font-size:.9rem; line-height:2;">
+              <li>📧 <a href="mailto:hello@adlaunch.io">hello@adlaunch.io</a></li>
+              <li>📞 +1 (800) 555-0190</li>
+              <li>🕐 Mon–Fri, 9 AM – 6 PM EST</li>
+              <li>📍 123 Marketing Ave, New York, NY 10001</li>
+            </ul>
+          </div>
+
+          <div class="card mt-2">
+            <div class="card-header">
+              <span class="card-title">Quick Links</span>
+            </div>
+            <ul style="list-style:none; font-size:.9rem; line-height:2.2;">
+              <li><a href="index.html">🏠 Home</a></li>
+              <li><a href="campaigns.html">📋 View All Campaigns</a></li>
+              <li><a href="campaign-detail.html">➕ Create New Campaign</a></li>
+              <li><a href="analytics.html">📊 Analytics Dashboard</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Send a Message</span>
+          </div>
+          <form>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="c-fname">First Name</label>
+                <input type="text" id="c-fname" placeholder="Jane" required />
+              </div>
+              <div class="form-group">
+                <label for="c-lname">Last Name</label>
+                <input type="text" id="c-lname" placeholder="Smith" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="c-email">Email Address</label>
+              <input type="email" id="c-email" placeholder="jane.smith@example.com" required />
+            </div>
+
+            <div class="form-group">
+              <label for="c-company">Company (optional)</label>
+              <input type="text" id="c-company" placeholder="Acme Corp" />
+            </div>
+
+            <div class="form-group">
+              <label for="c-subject">Subject</label>
+              <select id="c-subject">
+                <option value="">Select a topic…</option>
+                <option>General Inquiry</option>
+                <option>Campaign Support</option>
+                <option>Billing &amp; Payments</option>
+                <option>Technical Issue</option>
+                <option>Partnership</option>
+                <option>Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="c-message">Message</label>
+              <textarea id="c-message" rows="5" placeholder="How can we help you?" required></textarea>
+            </div>
+
+            <div style="display:flex; gap:.75rem; justify-content:flex-end; flex-wrap:wrap;">
+              <button type="reset" class="btn btn-outline">Clear</button>
+              <button type="submit" class="btn btn-primary">Send Message</button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-inner">
+      <span>© 2026 AdLaunch. All rights reserved.</span>
+      <span>
+        <a href="index.html">Home</a> &middot;
+        <a href="campaigns.html">Campaigns</a> &middot;
+        <a href="analytics.html">Analytics</a> &middot;
+        <a href="contact.html">Contact</a>
+      </span>
+    </div>
+  </footer>
+
+  <style>
+    @media (max-width: 700px) {
+      .contact-grid { grid-template-columns: 1fr !important; }
+    }
+  </style>
+
+</body>
+</html>

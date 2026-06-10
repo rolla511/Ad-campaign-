@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campaign Detail — AdLaunch</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="container nav-inner">
+      <a href="index.html" class="nav-logo">📢 AdLaunch</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="campaigns.html" class="active">Campaigns</a></li>
+        <li><a href="analytics.html">Analytics</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+
+      <!-- Breadcrumb -->
+      <p class="text-sm text-muted mb-1">
+        <a href="campaigns.html">← Back to Campaigns</a>
+      </p>
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h2>Summer Sale 2026</h2>
+          <p class="page-subtitle">
+            <span class="badge badge-active">Active</span>
+            &nbsp; Display &amp; Social &nbsp;·&nbsp; Jun 1 – Jul 31, 2026
+          </p>
+        </div>
+        <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
+          <button class="btn btn-outline" type="button">Edit Campaign</button>
+          <button class="btn btn-danger" type="button">Pause Campaign</button>
+        </div>
+      </div>
+
+      <!-- Summary Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Impressions</div>
+          <div class="stat-value">420K</div>
+          <div class="stat-change up">↑ 12% this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Clicks</div>
+          <div class="stat-value">13,440</div>
+          <div class="stat-change up">↑ 9% this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">CTR</div>
+          <div class="stat-value">3.2%</div>
+          <div class="stat-change up">↑ 0.3 pts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Conversions</div>
+          <div class="stat-value">1,056</div>
+          <div class="stat-change up">↑ 7%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Cost per Click</div>
+          <div class="stat-value">$0.24</div>
+          <div class="stat-change down">↓ $0.02</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Budget Remaining</div>
+          <div class="stat-value">$1,800</div>
+          <div class="stat-change">of $5,000 total</div>
+        </div>
+      </div>
+
+      <!-- Two columns: Details + Performance -->
+      <div style="display:grid; grid-template-columns:1fr 1.5fr; gap:1.25rem; margin-top:1.5rem;" class="detail-grid">
+
+        <!-- Campaign Details -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Campaign Details</span>
+          </div>
+
+          <table style="font-size:.88rem;">
+            <tbody>
+              <tr>
+                <td style="color:var(--text-muted); padding:.5rem .5rem .5rem 0; width:45%;">Campaign ID</td>
+                <td><strong>#CMP-2026-001</strong></td>
+              </tr>
+              <tr>
+                <td style="color:var(--text-muted); padding:.5rem .5rem .5rem 0;">Objective</td>
+                <td>Sales Conversions</td>
+              </tr>
+              <tr>
+                <td style="color:var(--text-muted); padding:.5rem .5rem .5rem 0;">Channels</td>
+                <td>Display, Social Media</td>
+              </tr>
+              <tr>
+                <td style="color:var(--text-muted); padding:.5rem .5rem .5rem 0;">Target Audience</td>
+                <td>Ages 25–45, Shoppers</td>
+              </tr>
+              <tr>
+                <td style="color:var(--text-muted); padding:.5rem .5rem .5rem 0;">Geographic Focus</td>
+                <td>USA, Canada, UK</td>
+              </tr>
+              <tr>
+                <td style="color:var(--text-muted); padding:.5rem .5rem .5rem 0;">Daily Budget</td>
+                <td>$161 / day</td>
+              </tr>
+              <tr>
+                <td style="color:var(--text-muted); padding:.5rem .5rem .5rem 0;">Total Budget</td>
+                <td>$5,000</td>
+              </tr>
+              <tr>
+                <td style="color:var(--text-muted); padding:.5rem .5rem .5rem 0;">Amount Spent</td>
+                <td>$3,200 (64%)</td>
+              </tr>
+              <tr>
+                <td style="color:var(--text-muted); padding:.5rem .5rem .5rem 0;">Start Date</td>
+                <td>June 1, 2026</td>
+              </tr>
+              <tr>
+                <td style="color:var(--text-muted); padding:.5rem .5rem .5rem 0;">End Date</td>
+                <td>July 31, 2026</td>
+              </tr>
+              <tr>
+                <td style="color:var(--text-muted); padding:.5rem .5rem .5rem 0;">Created By</td>
+                <td>Marketing Team</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="mt-2">
+            <div style="display:flex; justify-content:space-between; font-size:.8rem; margin-bottom:.3rem;">
+              <span>Budget progress</span><span>64%</span>
+            </div>
+            <div class="progress-bar" style="height:10px;">
+              <div class="progress-fill" style="width:64%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance chart placeholder -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Performance Over Time</span>
+            <select style="width:auto; padding:.3rem .6rem; font-size:.8rem;">
+              <option>Last 7 days</option>
+              <option>Last 30 days</option>
+              <option>All time</option>
+            </select>
+          </div>
+          <div class="chart-placeholder">
+            📈 &nbsp;Impressions &amp; Clicks chart (integrate your chart library here)
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:.75rem; margin-top:1rem;">
+            <div style="text-align:center; padding:.75rem; background:var(--bg); border-radius:var(--radius);">
+              <div style="font-size:.75rem; color:var(--text-muted);">Peak Day</div>
+              <div style="font-weight:700;">Jun 21</div>
+              <div style="font-size:.75rem; color:var(--text-muted);">42,000 impr.</div>
+            </div>
+            <div style="text-align:center; padding:.75rem; background:var(--bg); border-radius:var(--radius);">
+              <div style="font-size:.75rem; color:var(--text-muted);">Best CTR</div>
+              <div style="font-weight:700;">4.1%</div>
+              <div style="font-size:.75rem; color:var(--text-muted);">Jun 18</div>
+            </div>
+            <div style="text-align:center; padding:.75rem; background:var(--bg); border-radius:var(--radius);">
+              <div style="font-size:.75rem; color:var(--text-muted);">Avg. Daily Spend</div>
+              <div style="font-weight:700;">$80</div>
+              <div style="font-size:.75rem; color:var(--text-muted);">below budget</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Ad Creatives -->
+      <div class="card mt-3">
+        <div class="card-header">
+          <span class="card-title">Ad Creatives</span>
+          <button class="btn btn-sm btn-outline" type="button">+ Add Creative</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Creative Name</th>
+                <th>Format</th>
+                <th>Channel</th>
+                <th>Impressions</th>
+                <th>CTR</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Banner 728×90 — Summer</strong></td>
+                <td>Banner</td>
+                <td>Display</td>
+                <td>210,000</td>
+                <td>2.8%</td>
+                <td><span class="badge badge-active">Active</span></td>
+                <td><a href="#" class="btn btn-sm btn-outline">Preview</a></td>
+              </tr>
+              <tr>
+                <td><strong>Social Card — Sale 50%</strong></td>
+                <td>Image Post</td>
+                <td>Social</td>
+                <td>185,000</td>
+                <td>3.7%</td>
+                <td><span class="badge badge-active">Active</span></td>
+                <td><a href="#" class="btn btn-sm btn-outline">Preview</a></td>
+              </tr>
+              <tr>
+                <td><strong>Square Ad 300×250</strong></td>
+                <td>Banner</td>
+                <td>Display</td>
+                <td>25,000</td>
+                <td>1.9%</td>
+                <td><span class="badge badge-paused">Paused</span></td>
+                <td><a href="#" class="btn btn-sm btn-outline">Preview</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Edit Form -->
+      <div class="card mt-3">
+        <div class="card-header">
+          <span class="card-title">Edit Campaign</span>
+        </div>
+        <form>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="camp-name">Campaign Name</label>
+              <input type="text" id="camp-name" value="Summer Sale 2026" />
+            </div>
+            <div class="form-group">
+              <label for="camp-status">Status</label>
+              <select id="camp-status">
+                <option selected>Active</option>
+                <option>Paused</option>
+                <option>Draft</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="camp-budget">Total Budget ($)</label>
+              <input type="number" id="camp-budget" value="5000" min="0" />
+            </div>
+            <div class="form-group">
+              <label for="camp-channel">Channel</label>
+              <select id="camp-channel">
+                <option>Display &amp; Social</option>
+                <option>Search</option>
+                <option>Video</option>
+                <option>Email</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="camp-start">Start Date</label>
+              <input type="date" id="camp-start" value="2026-06-01" />
+            </div>
+            <div class="form-group">
+              <label for="camp-end">End Date</label>
+              <input type="date" id="camp-end" value="2026-07-31" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="camp-notes">Notes</label>
+            <textarea id="camp-notes" rows="3">Focus on summer shoppers in North America and UK. Use bright seasonal creatives.</textarea>
+          </div>
+          <div style="display:flex; gap:.75rem; justify-content:flex-end; flex-wrap:wrap;">
+            <a href="campaigns.html" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-inner">
+      <span>© 2026 AdLaunch. All rights reserved.</span>
+      <span>
+        <a href="index.html">Home</a> &middot;
+        <a href="campaigns.html">Campaigns</a> &middot;
+        <a href="analytics.html">Analytics</a> &middot;
+        <a href="contact.html">Contact</a>
+      </span>
+    </div>
+  </footer>
+
+  <style>
+    @media (max-width: 700px) {
+      .detail-grid { grid-template-columns: 1fr !important; }
+    }
+  </style>
+
+</body>
+</html>
