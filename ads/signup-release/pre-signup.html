@@ -45,6 +45,8 @@
 
     <form class="panel form-grid" id="pre-signup-form">
       <input type="hidden" name="role" id="input-role" value="SUBSCRIBER"/>
+      <input type="hidden" name="amount" value="10.99"/>
+      <input type="hidden" name="currency" value="USD"/>
       
       <div class="full-span">
         <h3 id="form-title">Subscriber Information</h3>
@@ -73,7 +75,7 @@
       <!-- Payment / Order Section -->
       <div class="full-span">
         <h4>Payment Verification</h4>
-        <p class="muted">Pre-signup requires a captured payment. Enter your PayPal Order ID below.</p>
+        <p class="muted">Pre-signup screening requires a one-time fee of <strong>$10.99</strong>. Enter your PayPal Order ID below after completing payment.</p>
       </div>
       <label class="full-span"><span>PayPal Order ID</span><input class="field" name="orderId" placeholder="PayPal Order ID" required/></label>
       <label class="toggle full-span"><input type="checkbox" name="capturePaypal" checked/><span>Capture payment on submission</span></label>
@@ -119,6 +121,8 @@
       },
       orderId: formData.get('orderId'),
       capturePaypal: formData.get('capturePaypal') === 'on',
+      amount: formData.get('amount'),
+      currency: formData.get('currency'),
       termsAccepted: formData.get('termsAccepted') === 'on'
     };
 
