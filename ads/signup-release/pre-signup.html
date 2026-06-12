@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AW Roadside | Pre-Signup Screening</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
+<style>
+  .pre-signup-container { max-width: 800px; margin: 40px auto; padding: 20px; }
+  .role-selector { display: flex; gap: 20px; margin-bottom: 30px; }
+  .role-option { flex: 1; padding: 20px; border: 2px solid #333; border-radius: 8px; cursor: pointer; text-align: center; background: #1a1a1a; transition: all 0.2s; }
+  .role-option.active { border-color: #ff3e3e; background: #2a1a1a; }
+  .role-option h3 { margin-top: 0; }
+  .hidden { display: none; }
+  .screening-info { background: #111; border-left: 4px solid #ff3e3e; padding: 15px; margin-bottom: 25px; font-size: 0.9em; }
+</style>
+</head>
+<body>
+<div class="page-shell">
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">AW Roadside</p>
+      <h1 class="brand-title">Pre-Signup Screening</h1>
+    </div>
+  </header>
+
+  <main class="pre-signup-container">
+    <div class="screening-info">
+      <p><strong>Logistics Screening:</strong> We are currently screening for service areas and logistics. Please select your role to continue. Access to the full application is restricted during the testing phase.</p>
+    </div>
+
+    <div class="role-selector">
+      <div class="role-option" id="role-subscriber" onclick="selectRole('SUBSCRIBER')">
+        <h3>Subscriber</h3>
+        <p class="muted">Looking for roadside service in your area.</p>
+      </div>
+      <div class="role-option" id="role-provider" onclick="selectRole('PROVIDER')">
+        <h3>Provider</h3>
+        <p class="muted">Ready to provide roadside assistance.</p>
+      </div>
+    </div>
+
+    <form class="panel form-grid" id="pre-signup-form">
+      <input type="hidden" name="role" id="input-role" value="SUBSCRIBER"/>
+      
+      <div class="full-span">
+        <h3 id="form-title">Subscriber Information</h3>
+      </div>
+
+      <label><span>Full Name</span><input class="field" name="fullName" placeholder="Full Name" required/></label>
+      <label><span>Email</span><input class="field" name="email" type="email" placeholder="email@example.com" required/></label>
+      <label><span>Phone Number</span><input class="field" name="phoneNumber" placeholder="Phone Number" required/></label>
+      <label><span>ZIP Code</span><input class="field" name="zip" placeholder="ZIP Code" required/></label>
+      <div style="font-size: 0.8em; color: #666; margin: 10px 0;">A temporary password will be sent to your email after payment.</div>
+      
+      <!-- Vehicle Section -->
+      <div class="full-span"><h4>Vehicle Information</h4></div>
+      <label><span>Year</span><input class="field" name="vehicleYear" placeholder="2020"/></label>
+      <label><span>Make</span><input class="field" name="vehicleMake" placeholder="Toyota"/></label>
+      <label><span>Model</span><input class="field" name="vehicleModel" placeholder="Corolla"/></label>
+      <label><span>Color</span><input class="field" name="vehicleColor" placeholder="Red"/></label>
+
+      <!-- Provider Specific Section -->
+      <div id="provider-fields" class="full-span hidden">
+        <div class="full-span"><h4>Provider Logistics</h4></div>
+        <label class="full-span"><span>Service Area Description</span><input class="field" name="serviceArea" placeholder="e.g. North Atlanta, Fulton County"/></label>
+        <label class="full-span"><span>Services Offered (comma separated)</span><input class="field" name="services" placeholder="Lockout, Tire Change, etc."/></label>
+      </div>
+
+      <!-- Payment / Order Section -->
+      <div class="full-span">
+        <h4>Payment Verification</h4>
+        <p class="muted">Pre-signup requires a captured payment. Enter your PayPal Order ID below.</p>
+      </div>
+      <label class="full-span"><span>PayPal Order ID</span><input class="field" name="orderId" placeholder="PayPal Order ID" required/></label>
+      <label class="toggle full-span"><input type="checkbox" name="capturePaypal" checked/><span>Capture payment on submission</span></label>
+
+      <label class="toggle full-span"><input type="checkbox" name="termsAccepted" required/><span>I accept the pre-signup terms and logistics screening policy.</span></label>
+      
+      <button class="glow-button wide full-span" type="submit">Submit Pre-Signup</button>
+      <div class="feedback-box full-span" id="feedback" style="display:none"></div>
+    </form>
+  </main>
+</div>
+
+<script>
+  function selectRole(role) {
+    document.getElementById('input-role').value = role;
+    document.getElementById('role-subscriber').classList.toggle('active', role === 'SUBSCRIBER');
+    document.getElementById('role-provider').classList.toggle('active', role === 'PROVIDER');
+    document.getElementById('form-title').innerText = role === 'SUBSCRIBER' ? 'Subscriber Information' : 'Provider Information';
+    document.getElementById('provider-fields').classList.toggle('hidden', role === 'SUBSCRIBER');
+  }
+
+  const form = document.getElementById('pre-signup-form');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const feedback = document.getElementById('feedback');
+    feedback.style.display = 'block';
+    feedback.className = 'feedback-box';
+    feedback.innerText = 'Submitting...';
+
+    const formData = new FormData(form);
+    const role = formData.get('role');
+    const data = {
+      role: role,
+      fullName: formData.get('fullName'),
+      email: formData.get('email'),
+      phoneNumber: formData.get('phoneNumber'),
+      zip: formData.get('zip'),
+      vehicle: {
+        year: formData.get('vehicleYear'),
+        make: formData.get('vehicleMake'),
+        model: formData.get('vehicleModel'),
+        color: formData.get('vehicleColor')
+      },
+      orderId: formData.get('orderId'),
+      capturePaypal: formData.get('capturePaypal') === 'on',
+      termsAccepted: formData.get('termsAccepted') === 'on'
+    };
+
+    if (role === 'PROVIDER') {
+      data.serviceArea = formData.get('serviceArea');
+      data.services = formData.get('services').split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    const endpoint = role === 'SUBSCRIBER' ? '/api/pre-signup/subscriber' : '/api/pre-signup/provider';
+    
+    // Determine backend URL
+    const currentOrigin = window.location.origin;
+    const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(currentOrigin);
+    const backendUrl = isLocal ? currentOrigin : "https://awroadside-fire-backend.onrender.com";
+
+    try {
+      const response = await fetch(backendUrl + endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        feedback.className = 'feedback-box success';
+        let msg = 'Success! Intake ID: ' + result.intakeId + '. Check your email for confirmation.';
+        if (result.session && result.session.token) {
+          localStorage.setItem('aw_auth_token', result.session.token);
+          localStorage.setItem('aw_user_id', result.session.userId);
+          localStorage.setItem('aw_user_roles', JSON.stringify(result.session.roles));
+          msg += ' You have been automatically logged in.';
+          
+          // Redirect to profile or home after a short delay
+          setTimeout(() => {
+             const target = result.role === 'PROVIDER' ? 'provider.html' : 'subscriber-access.html';
+             window.location.href = target;
+          }, 2000);
+        }
+        feedback.innerText = msg;
+        form.reset();
+      } else {
+        feedback.className = 'feedback-box error';
+        feedback.innerText = 'Error: ' + (result.message || result.error || 'Unknown error');
+      }
+    } catch (err) {
+      feedback.className = 'feedback-box error';
+      feedback.innerText = 'Network error: ' + err.message;
+    }
+  });
+</script>
+</body>
+</html>
