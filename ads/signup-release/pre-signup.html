@@ -80,6 +80,21 @@
       <label class="full-span"><span>PayPal Order ID</span><input class="field" name="orderId" placeholder="PayPal Order ID" required/></label>
       <label class="toggle full-span"><input type="checkbox" name="capturePaypal" checked/><span>Capture payment on submission</span></label>
 
+      <div class="full-span" style="border-top: 1px solid #333; margin-top: 10px; padding-top: 10px;">
+        <h4>Early Release App Testing</h4>
+        <p class="muted">Would you like to participate in early app testing? Your feedback helps us speed up the release!</p>
+      </div>
+      <label class="toggle full-span">
+        <span>Participate in testing?</span>
+        <select class="field" name="earlyTestingConsent" style="width: auto; display: inline-block; margin-left: 10px;">
+          <option value="no">No</option>
+          <option value="yes">Yes</option>
+        </select>
+      </label>
+      <div id="testing-email-container" class="full-span hidden">
+        <label><span>Play Store / App Store Email</span><input class="field" name="storeEmail" type="email" placeholder="email@example.com"/></label>
+      </div>
+
       <label class="toggle full-span"><input type="checkbox" name="termsAccepted" required/><span>I accept the pre-signup terms and logistics screening policy.</span></label>
       
       <button class="glow-button wide full-span" type="submit">Submit Pre-Signup</button>
@@ -96,6 +111,10 @@
     document.getElementById('form-title').innerText = role === 'SUBSCRIBER' ? 'Subscriber Information' : 'Provider Information';
     document.getElementById('provider-fields').classList.toggle('hidden', role === 'SUBSCRIBER');
   }
+
+  document.getElementById('pre-signup-form').querySelector('[name="earlyTestingConsent"]').addEventListener('change', function(e) {
+    document.getElementById('testing-email-container').classList.toggle('hidden', e.target.value !== 'yes');
+  });
 
   const form = document.getElementById('pre-signup-form');
   form.addEventListener('submit', async (e) => {
@@ -123,7 +142,9 @@
       capturePaypal: formData.get('capturePaypal') === 'on',
       amount: formData.get('amount'),
       currency: formData.get('currency'),
-      termsAccepted: formData.get('termsAccepted') === 'on'
+      termsAccepted: formData.get('termsAccepted') === 'on',
+      storeEmail: formData.get('storeEmail'),
+      earlyTestingConsent: formData.get('earlyTestingConsent') === 'yes'
     };
 
     if (role === 'PROVIDER') {
