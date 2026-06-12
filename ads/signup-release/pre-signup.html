@@ -7,15 +7,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="styles.css"/>
+<link rel="stylesheet" href="../../Aw-styles.css"/>
 <style>
-  .pre-signup-container { max-width: 800px; margin: 40px auto; padding: 20px; }
+  .pre-signup-container { max-width: 800px; margin: 40px auto; }
   .role-selector { display: flex; gap: 20px; margin-bottom: 30px; }
-  .role-option { flex: 1; padding: 20px; border: 2px solid #333; border-radius: 8px; cursor: pointer; text-align: center; background: #1a1a1a; transition: all 0.2s; }
-  .role-option.active { border-color: #ff3e3e; background: #2a1a1a; }
-  .role-option h3 { margin-top: 0; }
+  .role-option { flex: 1; padding: 20px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; text-align: center; background: #2a2a2a; transition: all 0.2s; }
+  .role-option.active { border-color: var(--red); background: #3a2a2a; }
+  .role-option h3 { margin-top: 0; color: #fff; }
+  .field { font-size: 14px !important; min-height: 48px; background: #1a1a1a; border: 1px solid #333; }
   .hidden { display: none; }
-  .screening-info { background: #111; border-left: 4px solid #ff3e3e; padding: 15px; margin-bottom: 25px; font-size: 0.9em; }
+  .screening-info { background: #222; border-left: 4px solid var(--red); padding: 15px; margin-bottom: 25px; font-size: 0.9em; }
 </style>
 </head>
 <body>
@@ -75,10 +76,14 @@
       <!-- Payment / Order Section -->
       <div class="full-span">
         <h4>Payment Verification</h4>
-        <p class="muted">Pre-signup screening requires a one-time fee of <strong>$10.99</strong>. Enter your PayPal Order ID below after completing payment.</p>
+        <p class="muted">Pre-signup screening requires a one-time fee of <strong>$10.99</strong>. Enter your payment details below to complete the screening.</p>
       </div>
-      <label class="full-span"><span>PayPal Order ID</span><input class="field" name="orderId" placeholder="PayPal Order ID" required/></label>
-      <label class="toggle full-span"><input type="checkbox" name="capturePaypal" checked/><span>Capture payment on submission</span></label>
+      <label class="full-span"><span>Credit Card Number</span><input class="field" name="cardNumber" placeholder="0000 0000 0000 0000" required/></label>
+      <div class="full-span form-grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+        <label><span>Expiration Date</span><input class="field" name="cardExp" placeholder="MM/YY" required/></label>
+        <label><span>CVV / PayPal ID (Optional)</span><input class="field" name="orderId" placeholder="CVV or ID"/></label>
+      </div>
+      <label class="toggle full-span"><input type="checkbox" name="capturePaypal" checked/><span>Process payment on submission</span></label>
 
       <div class="full-span" style="border-top: 1px solid #333; margin-top: 10px; padding-top: 10px;">
         <h4>Early Release App Testing</h4>
@@ -138,7 +143,9 @@
         model: formData.get('vehicleModel'),
         color: formData.get('vehicleColor')
       },
-      orderId: formData.get('orderId'),
+      orderId: formData.get('orderId') || 'CC_MOCK_' + Date.now(),
+      cardNumber: formData.get('cardNumber'),
+      cardExp: formData.get('cardExp'),
       capturePaypal: formData.get('capturePaypal') === 'on',
       amount: formData.get('amount'),
       currency: formData.get('currency'),
