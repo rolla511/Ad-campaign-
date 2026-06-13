@@ -248,9 +248,11 @@
     configured: false,
     enabled: false,
     orderId: "",
+    subscriptionId: "",
     captureId: "",
     captured: false,
-    status: ""
+    status: "",
+    activationStatus: ""
   };
 
   function selectRole(role) {
@@ -310,7 +312,7 @@
       }
 
       const script = document.createElement('script');
-      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&intent=capture`;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&intent=subscription&vault=true`;
       script.async = true;
       script.dataset.paypalSdk = 'true';
       script.onload = () => resolve();
@@ -321,8 +323,7 @@
 
   async function initializePaypalForPreSignup() {
     const backendBase = getBackendBaseUrl();
-    const createOrderPath = `${backendBase}/index.mjs/payments/create-order`;
-    const captureOrderPath = `${backendBase}/index.mjs/payments/capture-order`;
+    const createSubscriptionPath = `${backendBase}/index.mjs/payments/create-subscription`;
 
     try {
       const paymentConfig = await fetchJsonWithFallback([
@@ -345,57 +346,63 @@
         return;
       }
 
-      setPaypalStatus('Complete PayPal payment first, then submit pre-signup.');
+      setPaypalStatus('Complete PayPal approval first. Your subscription will remain pending activation until full signup is completed.');
       window.paypal.Buttons({
         style: { shape: 'pill', layout: 'vertical', label: 'pay' },
-        async createOrder() {
+        async createSubscription() {
           const role = document.getElementById('input-role').value || 'SUBSCRIBER';
+          if (role !== 'SUBSCRIBER') {
+            setPaypalStatus('Provider pre-signup still uses one-time payment capture. Switch role to subscriber for subscription flow.');
+            throw new Error('Subscription payment is only configured for subscriber pre-signup.');
+          }
+
+          const planId = paymentConfig?.subscriberPlanId || null;
+          if (!planId) {
+            throw new Error('Subscriber plan is not configured. Set PAYPAL_SUBSCRIBER_PLAN_ID on the backend.');
+          }
+
           const payload = {
-            amount: PAYPAL_SCREENING_AMOUNT,
-            paymentKind: role === 'PROVIDER' ? 'provider-membership' : 'membership',
-            serviceType: role === 'PROVIDER' ? 'pre-signup-provider-screening' : 'pre-signup-subscriber-screening'
+            paymentKind: 'membership',
+            planId,
+            custom_id: `presignup-${Date.now()}`
           };
-          const order = await fetchJsonWithFallback([createOrderPath], {
+          const subscription = await fetchJsonWithFallback([createSubscriptionPath], {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
-          if (!order?.orderId) {
-            throw new Error('Unable to create PayPal order.');
+          if (!subscription?.subscriptionId) {
+            throw new Error('Unable to create PayPal subscription.');
           }
-          paypalState.orderId = order.orderId;
+          paypalState.subscriptionId = subscription.subscriptionId;
+          paypalState.orderId = subscription.subscriptionId;
           paypalState.captured = false;
           paypalState.captureId = '';
-          paypalState.status = order.status || 'CREATED';
-          setPaypalStatus(`PayPal order ${order.orderId} created. Complete payment in popup.`);
-          return order.orderId;
+          paypalState.status = subscription.status || 'APPROVAL_PENDING';
+          paypalState.activationStatus = subscription.pendingStatus || 'PENDING_ACTIVATION';
+          setPaypalStatus(`PayPal subscription ${subscription.subscriptionId} created. Approve in popup to continue (activation remains pending).`);
+          return subscription.subscriptionId;
         },
         async onApprove(data) {
-          const capture = await fetchJsonWithFallback([captureOrderPath], {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              orderId: data.orderID,
-              paymentKind: 'membership'
-            })
-          });
-          paypalState.orderId = data.orderID || paypalState.orderId;
-          paypalState.captureId = capture?.capture?.id || capture?.captureId || '';
-          paypalState.status = capture?.status || 'COMPLETED';
-          paypalState.captured = Boolean(paypalState.captureId || String(paypalState.status).toUpperCase() === 'COMPLETED');
+          paypalState.subscriptionId = data?.subscriptionID || paypalState.subscriptionId;
+          paypalState.orderId = paypalState.subscriptionId || paypalState.orderId;
+          paypalState.captureId = paypalState.subscriptionId || '';
+          paypalState.status = 'APPROVED';
+          paypalState.activationStatus = 'PENDING_ACTIVATION';
+          paypalState.captured = Boolean(paypalState.subscriptionId);
           if (!paypalState.captured) {
-            throw new Error('Payment was approved but capture did not complete.');
+            throw new Error('Subscription approval did not complete.');
           }
           document.querySelector('[name="orderId"]').value = paypalState.orderId;
-          setPaypalStatus('Payment accepted. You can now submit pre-signup.');
+          setPaypalStatus('Subscription approved and stored as pending activation. Complete full signup to activate billing/access.');
         },
         onCancel() {
           paypalState.captured = false;
-          setPaypalStatus('Payment was canceled. You can try again before submitting.');
+          setPaypalStatus('Subscription approval was canceled. You can try again before submitting.');
         },
         onError(error) {
           paypalState.captured = false;
-          setPaypalStatus(`PayPal payment failed: ${error?.message || 'Unknown error'}`);
+          setPaypalStatus(`PayPal subscription failed: ${error?.message || 'Unknown error'}`);
         }
       }).render('#paypal-button-container');
     } catch (error) {
@@ -434,11 +441,14 @@
       cardNumber: formData.get('cardNumber'),
       cardExp: formData.get('cardExp'),
       capturePaypal: (formData.get('capturePaypal') === 'on') && !paypalState.captured,
-      captureId: paypalState.captureId || null,
+      captureId: paypalState.captureId || paypalState.subscriptionId || null,
       captureStatus: paypalState.status || null,
+      subscriptionActivationStatus: paypalState.activationStatus || null,
+      subscriptionPendingActivation: paypalState.captured,
+      subscriptionId: paypalState.subscriptionId || null,
       capture: paypalState.captured ? {
-        id: paypalState.captureId || null,
-        status: paypalState.status || 'COMPLETED'
+        id: paypalState.captureId || paypalState.subscriptionId || null,
+        status: paypalState.status || 'APPROVED'
       } : null,
       amount: formData.get('amount'),
       currency: formData.get('currency'),
@@ -458,7 +468,7 @@
     if ((formData.get('capturePaypal') === 'on') && !paypalState.captured && !data.orderId) {
       submitBtn.disabled = false;
       feedback.className = 'feedback-box error';
-      feedback.innerText = 'Payment has not been accepted yet. Please complete PayPal payment first.';
+      feedback.innerText = 'PayPal approval has not completed yet. Please finish approval first.';
       return;
     }
 
@@ -484,7 +494,7 @@
       const result = await response.json();
       if (response.ok) {
         feedback.className = 'feedback-box success';
-        feedback.innerText = 'Payment accepted and pre-signup submitted successfully. Redirecting...';
+        feedback.innerText = 'Pre-signup submitted. Subscription is approved but pending activation until full signup is complete. Redirecting...';
         
         // Show confirmation screen
         document.getElementById('pre-signup-form').classList.add('hidden');
