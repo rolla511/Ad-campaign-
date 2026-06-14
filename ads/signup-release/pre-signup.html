@@ -280,21 +280,21 @@
 
   function getBackendBaseUrl() {
     const currentOrigin = window.location.origin;
-    const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(currentOrigin);
-    if (isLocal) {
+    const currentHost = (window.location.hostname || '').toLowerCase();
+    const isLocal = currentHost === 'localhost' || currentHost === '127.0.0.1';
+    
+    // If we are already on the backend domain, use it directly
+    if (currentHost === 'awroadside-fire-backend.onrender.com' || currentHost.endsWith('.awroadside-fire-backend.onrender.com')) {
       return currentOrigin;
     }
 
-    const currentHost = (window.location.hostname || '').toLowerCase();
+    // Force production backend for known deployment domains
     if (currentHost === 'aw-roadside.onrender.com' || currentHost.endsWith('.aw-roadside.onrender.com')) {
       return 'https://awroadside-fire-backend.onrender.com';
     }
 
-    if (currentHost === 'awroadside-fire-backend.onrender.com' || currentHost.endsWith('.awroadside-fire-backend.onrender.com')) {
-      return window.location.origin;
-    }
-
-    return 'https://awroadside-fire-backend.onrender.com';
+    // Fallback for local testing or other domains
+    return isLocal ? currentOrigin : 'https://awroadside-fire-backend.onrender.com';
   }
 
   async function fetchJsonWithFallback(paths, options = {}) {
@@ -373,6 +373,35 @@
       setPaypalStatus('Complete PayPal approval first. Your subscription will remain pending activation until full signup is completed.');
       window.paypal.Buttons({
         style: { shape: 'pill', layout: 'vertical', label: 'pay' },
+        async createOrder() {
+          const role = document.getElementById('input-role').value || 'SUBSCRIBER';
+          if (role === 'SUBSCRIBER') return; // Handled by createSubscription
+
+          const createOrderPath = `${backendBase}/index.mjs/payments/create-order`;
+          const payload = {
+            paymentKind: role === 'PROVIDER' ? 'provider-membership' : 'priority',
+            brand_name: 'AW Roadside',
+            description: `AW Roadside Pre-Signup Screening - ${role}`,
+            application_context: {
+              brand_name: 'AW Roadside',
+              shipping_preference: 'NO_SHIPPING',
+              user_action: 'PAY_NOW'
+            }
+          };
+
+          const order = await fetchJsonWithFallback([createOrderPath], {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!order?.orderId) {
+            throw new Error('Unable to create PayPal order.');
+          }
+          paypalState.orderId = order.orderId;
+          paypalState.status = order.status || 'CREATED';
+          return order.orderId;
+        },
         async createSubscription() {
           const role = document.getElementById('input-role').value || 'SUBSCRIBER';
           if (role !== 'SUBSCRIBER') {
@@ -388,7 +417,21 @@
           const payload = {
             paymentKind: 'membership',
             planId,
-            custom_id: `presignup-${Date.now()}`
+            custom_id: `presignup-${Date.now()}`,
+            brand_name: 'AW Roadside',
+            description: `AW Roadside Pre-Signup Screening - ${role}`,
+            subscriber: {
+              name: {
+                given_name: document.querySelector('[name="fullName"]').value.split(' ')[0],
+                surname: document.querySelector('[name="fullName"]').value.split(' ').slice(1).join(' ') || 'User'
+              },
+              email_address: document.querySelector('[name="email"]').value
+            },
+            application_context: {
+              brand_name: 'AW Roadside',
+              shipping_preference: 'NO_SHIPPING',
+              user_action: 'SUBSCRIBE_NOW'
+            }
           };
           const subscription = await fetchJsonWithFallback([createSubscriptionPath], {
             method: 'POST',
@@ -408,6 +451,28 @@
           return subscription.subscriptionId;
         },
         async onApprove(data) {
+          if (data.orderID && !data.subscriptionID) {
+            // This is a createOrder flow (Provider)
+            const captureOrderPath = `${backendBase}/index.mjs/payments/capture-order`;
+            const capture = await fetchJsonWithFallback([captureOrderPath], {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ orderId: data.orderID })
+            });
+            
+            if (capture.status === 'COMPLETED' || capture.status === 'APPROVED' || capture.status === 'CAPTURED') {
+              paypalState.captured = true;
+              paypalState.orderId = data.orderID;
+              paypalState.captureId = capture.capture?.id || data.orderID;
+              paypalState.status = capture.status;
+              document.querySelector('[name="orderId"]').value = paypalState.orderId;
+              setPaypalStatus('Payment captured successfully. You can now submit your pre-signup details.');
+            } else {
+              throw new Error('Payment capture did not complete: ' + (capture.message || capture.status));
+            }
+            return;
+          }
+
           paypalState.subscriptionId = data?.subscriptionID || paypalState.subscriptionId;
           paypalState.orderId = paypalState.subscriptionId || paypalState.orderId;
           paypalState.captureId = paypalState.subscriptionId || '';
