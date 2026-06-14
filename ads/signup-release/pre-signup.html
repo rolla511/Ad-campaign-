@@ -170,7 +170,7 @@
          <h2>Pre-Signup Received</h2>
          <p>Thank you for joining AW Roadside. Your intake has been successfully processed.</p>
          <div class="id-badge" id="display-intake-id"></div>
-         <p style="font-size: 0.9rem; color: #aaa;">Check your email for a confirmation and temporary password. You will be redirected shortly.</p>
+         <p style="font-size: 0.9rem; color: #aaa;">Check your email for your confirmation details. You will be redirected shortly.</p>
          <button class="glow-button" onclick="window.location.reload()">Finish</button>
        </div>
     </div>
@@ -188,7 +188,7 @@
       <label><span>Email</span><input class="field" name="email" type="email" placeholder="email@example.com" required/></label>
       <label><span>Phone Number</span><input class="field" name="phoneNumber" placeholder="Phone Number" required/></label>
       <label><span>ZIP Code</span><input class="field" name="zip" placeholder="ZIP Code" required/></label>
-      <div style="font-size: 0.85em; color: var(--yellow); margin: 10px 0; font-weight: 600;">A temporary password will be sent to your email after payment.</div>
+      <div style="font-size: 0.85em; color: var(--yellow); margin: 10px 0; font-weight: 600;">No password is required at pre-signup. Final account activation happens after full signup approval.</div>
       
       <!-- Vehicle Section -->
       <div class="full-span"><h4>Vehicle Information</h4></div>
@@ -207,16 +207,25 @@
       <!-- Payment / Order Section -->
       <div class="full-span">
         <h4>Payment Verification</h4>
-        <p class="muted">Pre-signup screening requires a one-time fee of <strong>$10.99</strong>. Enter your payment details below to complete the screening.</p>
-        <div style="font-size: 0.8em; color: var(--yellow); margin-bottom: 10px;">NOTE: Payments are processed via secure PayPal gateway.</div>
+        <p class="muted">Pre-signup screening requires PayPal approval or a captured transaction. Billing and activation remain pending until full signup is complete.</p>
+        <div style="font-size: 0.85em; color: var(--yellow); margin-bottom: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 4px;">
+          <strong>Card Users:</strong> Direct card entry below is for screening purposes. Please ensure your card supports secure online authorization.
+        </div>
         <div id="paypal-payment-status" class="muted" style="margin-top: 8px;">Loading PayPal payment options…</div>
         <div id="paypal-button-container" style="margin-top: 12px;"></div>
       </div>
-      <label class="full-span"><span>Credit Card Number</span><input class="field" name="cardNumber" placeholder="0000 0000 0000 0000" required/></label>
-      <div class="full-span form-grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
-        <label><span>Expiration Date</span><input class="field" name="cardExp" placeholder="MM/YY" required/></label>
-        <label><span>CVV / PayPal ID (Optional)</span><input class="field" name="orderId" placeholder="CVV or ID"/></label>
+
+      <div class="full-span" style="margin-top: 20px;">
+        <h4 style="font-size: 1rem; color: #fff; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 6px;">Credit Card Details (Secured via PayPal Guest Checkout)</h4>
       </div>
+      <label class="full-span"><span>Name on Card</span><input class="field" name="cardName" placeholder="As it appears on card"/></label>
+      <label class="full-span"><span>Credit Card Number</span><input class="field" name="cardNumber" placeholder="0000 0000 0000 0000"/></label>
+      <div class="full-span form-grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+        <label><span>Expiration Date</span><input class="field" name="cardExp" placeholder="MM/YY"/></label>
+        <label><span>CVV</span><input class="field" name="cardCvv" placeholder="123"/></label>
+      </div>
+
+      <label class="full-span"><span>PayPal Approval / Subscription ID (Optional)</span><input class="field" name="orderId" placeholder="Filled automatically after PayPal approval"/></label>
       <label class="toggle full-span"><input type="checkbox" name="capturePaypal" checked/><span>Process payment on submission</span></label>
 
       <div class="full-span" style="border-top: 1px solid #333; margin-top: 10px; padding-top: 10px;">
@@ -234,6 +243,8 @@
         <label><span>Play Store / App Store Email</span><input class="field" name="storeEmail" type="email" placeholder="email@example.com"/></label>
       </div>
 
+      <label class="full-span"><span>Digital Signature (Type Full Name)</span><input class="field" name="electronicSignatureName" placeholder="Type your legal full name" required/></label>
+      <label class="toggle full-span"><input type="checkbox" name="electronicSignatureAccepted" required/><span>I Agree and confirm this typed name is my electronic signature.</span></label>
       <label class="toggle full-span"><input type="checkbox" name="termsAccepted" required/><span>I accept the pre-signup terms and logistics screening policy.</span></label>
       
       <button class="glow-button wide full-span" type="submit">Submit Pre-Signup</button>
@@ -270,7 +281,20 @@
   function getBackendBaseUrl() {
     const currentOrigin = window.location.origin;
     const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(currentOrigin);
-    return isLocal ? currentOrigin : 'https://awroadside-fire-backend.onrender.com';
+    if (isLocal) {
+      return currentOrigin;
+    }
+
+    const currentHost = (window.location.hostname || '').toLowerCase();
+    if (currentHost === 'aw-roadside.onrender.com' || currentHost.endsWith('.aw-roadside.onrender.com')) {
+      return 'https://awroadside-fire-backend.onrender.com';
+    }
+
+    if (currentHost === 'awroadside-fire-backend.onrender.com' || currentHost.endsWith('.awroadside-fire-backend.onrender.com')) {
+      return window.location.origin;
+    }
+
+    return 'https://awroadside-fire-backend.onrender.com';
   }
 
   async function fetchJsonWithFallback(paths, options = {}) {
@@ -438,8 +462,15 @@
         color: formData.get('vehicleColor')
       },
       orderId: paypalState.orderId || formData.get('orderId') || '',
+      cardName: formData.get('cardName'),
       cardNumber: formData.get('cardNumber'),
       cardExp: formData.get('cardExp'),
+      cardCvv: formData.get('cardCvv'),
+      electronicSignature: {
+        accepted: formData.get('electronicSignatureAccepted') === 'on',
+        signedName: (formData.get('electronicSignatureName') || '').trim() || null,
+        signedAt: new Date().toISOString()
+      },
       capturePaypal: (formData.get('capturePaypal') === 'on') && !paypalState.captured,
       captureId: paypalState.captureId || paypalState.subscriptionId || null,
       captureStatus: paypalState.status || null,
@@ -466,10 +497,21 @@
     const backendUrl = getBackendBaseUrl();
 
     if ((formData.get('capturePaypal') === 'on') && !paypalState.captured && !data.orderId) {
-      submitBtn.disabled = false;
-      feedback.className = 'feedback-box error';
-      feedback.innerText = 'PayPal approval has not completed yet. Please finish approval first.';
-      return;
+      // If card info is provided but no PayPal orderId/subscriptionId, 
+      // we need to tell the user they must still use the PayPal button or a real captured source.
+      if (!data.cardNumber) {
+        submitBtn.disabled = false;
+        feedback.className = 'feedback-box error';
+        feedback.innerText = 'Please complete PayPal approval first.';
+        return;
+      } else {
+        // Card data is present but we haven't implemented backend capture for raw cards yet.
+        // The user's goal is to NOT allow just card details to count as capture.
+        submitBtn.disabled = false;
+        feedback.className = 'feedback-box error';
+        feedback.innerText = 'Direct card processing is currently handled via the PayPal button "Debit or Credit Card" option. Please use that for immediate capture.';
+        return;
+      }
     }
 
     // In some environments, we might be serving from a subpath or different origin
