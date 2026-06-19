@@ -209,7 +209,7 @@
         <h4>Payment Verification</h4>
         <p class="muted">Pre-signup screening requires PayPal approval or a captured transaction. Billing and activation remain pending until full signup is complete.</p>
         <div style="font-size: 0.85em; color: var(--yellow); margin-bottom: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 4px;">
-          <strong>Card Users:</strong> Direct card entry below is for screening purposes. Please ensure your card supports secure online authorization.
+          <strong>Advanced Security:</strong> This form now supports 3D Secure and secure vaulting for future payments.
         </div>
         <div id="paypal-payment-status" class="muted" style="margin-top: 8px;">Loading PayPal payment options…</div>
         <div id="paypal-button-container" style="margin-top: 12px;"></div>
@@ -381,6 +381,12 @@
                 paymentKind: role === 'PROVIDER' ? 'provider-membership' : 'priority',
                 brand_name: 'AW Roadside',
                 description: `AW Roadside Pre-Signup Screening - ${role}`,
+                vault: {
+                  store_in_vault: 'ON_SUCCESS'
+                },
+                verification: {
+                  method: 'SCA_WHEN_REQUIRED'
+                },
                 application_context: {
                   brand_name: 'AW Roadside',
                   shipping_preference: 'NO_SHIPPING',
@@ -418,6 +424,12 @@
                 custom_id: `presignup-${Date.now()}`,
                 brand_name: 'AW Roadside',
                 description: `AW Roadside Pre-Signup Screening - ${role}`,
+                vault: {
+                  store_in_vault: 'ON_SUCCESS'
+                },
+                verification: {
+                  method: 'SCA_WHEN_REQUIRED'
+                },
                 subscriber: {
                   name: {
                     given_name: document.querySelector('[name="fullName"]').value.split(' ')[0] || 'User',
