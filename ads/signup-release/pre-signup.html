@@ -115,7 +115,7 @@
       </div>
     </div>
 
-    <div id="confirmation-view" class="hidden">
+    <div id="confirmation-view" class="hidden" hidden>
        <div class="confirmation-screen">
          <div style="font-size: 4rem; margin-bottom: 20px;">✅</div>
          <h2>Pre-Signup Received</h2>
@@ -545,7 +545,9 @@
         document.querySelector('.role-selector').classList.add('hidden');
         document.querySelector('.screening-info').classList.add('hidden');
         document.getElementById('display-intake-id').innerText = result.intakeId;
-        document.getElementById('confirmation-view').classList.remove('hidden');
+        const confirmationView = document.getElementById('confirmation-view');
+        confirmationView.hidden = false;
+        confirmationView.classList.remove('hidden');
 
         if (result.session && result.session.token) {
           localStorage.setItem('aw_auth_token', result.session.token);

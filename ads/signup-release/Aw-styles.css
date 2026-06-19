@@ -18,9 +18,10 @@ body{
   position:relative;
   overflow-x:hidden;
   background:
-    radial-gradient(950px 440px at 50% -8%, rgba(255, 204, 0, 0.08), transparent 62%),
-    radial-gradient(1200px 520px at 50% 115%, rgba(255, 62, 62, 0.08), transparent 65%),
-    linear-gradient(180deg, #161f2f 0%, var(--bg) 52%, #090f18 100%);
+    linear-gradient(110deg, rgba(255, 204, 0, 0.12) 0 9%, transparent 9% 100%),
+    radial-gradient(950px 440px at 50% -8%, rgba(255, 204, 0, 0.18), transparent 62%),
+    radial-gradient(1200px 520px at 50% 115%, rgba(255, 62, 62, 0.18), transparent 65%),
+    linear-gradient(135deg, #0d1117 0%, #000000 48%, #1a0505 100%);
   color:var(--text);
   font-family:'Sora',sans-serif;
   min-height:100vh;
@@ -160,7 +161,8 @@ h4{
   border-radius: 8px; 
   color: #fff; 
 }
-.hidden { display: none; }
+.hidden,
+[hidden] { display: none !important; }
 label span { 
   display: block; 
   margin-bottom: 8px; 
@@ -171,17 +173,18 @@ label span {
   letter-spacing: 0.5px; 
 }
 .field{
-  width:100%;
-  padding:13px 14px;
+  width:180px;
+  padding:4px 10px;
   border:1px solid #607996;
-  border-radius:14px;
+  border-radius:6px;
   background:#f7fbff;
   color:#102036;
   font-size:14px;
-  line-height:1.35;
-  min-height:50px;
+  line-height:1;
+  height:24px;
+  min-height:24px;
   transition:all 0.2s;
-  box-shadow: inset 0 1px 2px rgba(16,32,54,.08), 0 8px 18px rgba(0,0,0,.12);
+  box-shadow: inset 0 1px 2px rgba(16,32,54,.08), 0 4px 8px rgba(0,0,0,.12);
 }
 .field:focus{
   outline:none;
@@ -282,9 +285,10 @@ label span {
   font-family: 'Rajdhani', sans-serif;
   font-weight: 800;
   font-size: 64px;
-  fill: var(--red);
+  fill: #ffffff;
   text-transform: uppercase;
   letter-spacing: 4px;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.2);
 }
 .slogan-slanted {
   font-family: 'Sora', sans-serif;
