@@ -336,7 +336,9 @@
       }
 
       const script = document.createElement('script');
-      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&intent=subscription&vault=true`;
+      // Use intent=capture as default for pre-signup one-time fee
+      // Only use intent=subscription if we are absolutely sure we are doing a subscription here
+      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&intent=capture&vault=true`;
       script.async = true;
       script.dataset.paypalSdk = 'true';
       script.onload = () => resolve();
@@ -473,16 +475,19 @@
                 // One-time payment (Provider)
                 paypalState.status = 'APPROVED';
                 paypalState.captured = false; // We will capture on the backend during intake
-                setPaypalStatus('Payment approved. Click "Submit Pre-Signup" at the bottom to complete capture and registration.');
+                setPaypalStatus('Payment approved. Processing submission...');
               } else {
                 // Subscription (Subscriber)
                 paypalState.status = 'APPROVED';
                 paypalState.captureId = data.subscriptionID;
                 paypalState.captured = true;
-                setPaypalStatus('Subscription approved. Click "Submit Pre-Signup" to complete registration.');
+                setPaypalStatus('Subscription approved. Processing submission...');
               }
               
               document.querySelector('[name="orderId"]').value = orderId;
+              
+              // Auto-submit form on approval
+              document.getElementById('pre-signup-form').requestSubmit();
             },
         onCancel() {
           paypalState.captured = false;

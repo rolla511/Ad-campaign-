@@ -207,15 +207,12 @@
       <!-- Payment / Order Section -->
       <div class="full-span">
         <h4>Payment Verification</h4>
-        <p class="muted">Pre-signup screening requires a one-time fee of <strong>$10.99</strong>. Enter your payment details below to complete the screening.</p>
-        <div style="font-size: 0.8em; color: var(--yellow); margin-bottom: 10px;">NOTE: Payments are processed via secure PayPal gateway.</div>
+        <div id="paypal-payment-status" class="muted" style="margin-top: 8px;">Loading PayPal payment options…</div>
+        <div id="paypal-button-container" style="margin-top: 12px;"></div>
+        <input type="hidden" name="orderId" id="input-order-id"/>
+        <input type="hidden" name="captureStatus" id="input-capture-status"/>
+        <input type="hidden" name="captureId" id="input-capture-id"/>
       </div>
-      <label class="full-span"><span>Credit Card Number</span><input class="field" name="cardNumber" placeholder="0000 0000 0000 0000" required/></label>
-      <div class="full-span form-grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
-        <label><span>Expiration Date</span><input class="field" name="cardExp" placeholder="MM/YY" required/></label>
-        <label><span>CVV / PayPal ID (Optional)</span><input class="field" name="orderId" placeholder="CVV or ID"/></label>
-      </div>
-      <label class="toggle full-span"><input type="checkbox" name="capturePaypal" checked/><span>Process payment on submission</span></label>
 
       <div class="full-span" style="border-top: 1px solid #333; margin-top: 10px; padding-top: 10px;">
         <h4>Early Release App Testing</h4>
@@ -253,6 +250,149 @@
     document.getElementById('testing-email-container').classList.toggle('hidden', e.target.value !== 'yes');
   });
 
+  const paypalState = {
+    configured: false,
+    enabled: false,
+    orderId: '',
+    subscriptionId: '',
+    captureId: '',
+    captured: false,
+    status: '',
+    activationStatus: ''
+  };
+
+  function getBackendBaseUrl() {
+    const currentOrigin = window.location.origin;
+    const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(currentOrigin);
+    return isLocal ? currentOrigin : "https://awroadside-fire-backend.onrender.com";
+  }
+
+  async function fetchJsonWithFallback(paths, options = {}) {
+    let lastError = null;
+    for (const path of paths) {
+      try {
+        const response = await fetch(path, options);
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const message = payload?.message || payload?.error || `Request failed (${response.status})`;
+          throw new Error(message);
+        }
+        return payload;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw lastError || new Error('Request failed');
+  }
+
+  function setPaypalStatus(message) {
+    const paypalStatus = document.getElementById('paypal-payment-status');
+    if (paypalStatus) {
+      paypalStatus.innerText = message;
+    }
+  }
+
+  async function ensurePaypalSdk(clientId, currency = 'USD') {
+    if (window.paypal && window.paypal.Buttons) {
+      return;
+    }
+
+    await new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[data-paypal-sdk="true"]');
+      if (existing) {
+        existing.addEventListener('load', resolve, { once: true });
+        existing.addEventListener('error', () => reject(new Error('Failed to load PayPal SDK.')), { once: true });
+        return;
+      }
+
+      const script = document.createElement('script');
+      // Use intent=capture as default for pre-signup one-time fee
+      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&intent=capture&vault=true`;
+      script.async = true;
+      script.dataset.paypalSdk = 'true';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load PayPal SDK.'));
+      document.head.appendChild(script);
+    });
+  }
+
+  async function initializePaypalForPreSignup() {
+    const backendBase = getBackendBaseUrl();
+
+    try {
+      const paymentConfig = await fetchJsonWithFallback([
+        `${backendBase}/api/payments/config`,
+        `${backendBase}/index.mjs/payments/config`
+      ]);
+
+      paypalState.configured = Boolean(paymentConfig?.enabled && paymentConfig?.clientId);
+      paypalState.enabled = paypalState.configured;
+
+      if (!paypalState.configured) {
+        setPaypalStatus('PayPal is currently unavailable. You can still submit and receive a payment status response.');
+        return;
+      }
+
+      await ensurePaypalSdk(paymentConfig.clientId, paymentConfig.currency || 'USD');
+
+      if (!window.paypal || !window.paypal.Buttons) {
+        setPaypalStatus('PayPal SDK failed to initialize. Please try again later.');
+        return;
+      }
+
+      setPaypalStatus('Please complete PayPal approval to proceed.');
+      window.paypal.Buttons({
+        style: { shape: 'pill', layout: 'vertical', label: 'pay' },
+        async createOrder() {
+          const role = document.getElementById('input-role').value || 'SUBSCRIBER';
+          const createOrderPath = `${backendBase}/api/payments/create-order`;
+          const payload = {
+            paymentKind: role === 'PROVIDER' ? 'provider-membership' : 'priority',
+            brand_name: 'AW Roadside',
+            description: `AW Roadside Pre-Signup Screening - ${role}`,
+            vault: {
+              store_in_vault: 'ON_SUCCESS'
+            },
+            application_context: {
+              brand_name: 'AW Roadside',
+              shipping_preference: 'NO_SHIPPING',
+              user_action: 'PAY_NOW'
+            }
+          };
+
+          const order = await fetchJsonWithFallback([createOrderPath], {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!order?.orderId) {
+            throw new Error('Unable to create PayPal order.');
+          }
+          paypalState.orderId = order.orderId;
+          paypalState.status = order.status || 'CREATED';
+          return order.orderId;
+        },
+        async onApprove(data) {
+          setPaypalStatus('Payment approved! Processing your pre-signup...');
+          paypalState.status = 'APPROVED';
+          paypalState.orderId = data.orderID;
+          paypalState.captured = false; 
+          
+          // Auto-submit form on approval
+          document.getElementById('pre-signup-form').requestSubmit();
+        },
+        onError(error) {
+          setPaypalStatus(`PayPal failed: ${error?.message || 'Unknown error'}`);
+        }
+      }).render('#paypal-button-container');
+    } catch (error) {
+      setPaypalStatus(`Unable to initialize PayPal: ${error.message}`);
+    }
+  }
+
+  initializePaypalForPreSignup();
+
   const form = document.getElementById('pre-signup-form');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -278,10 +418,10 @@
         model: formData.get('vehicleModel'),
         color: formData.get('vehicleColor')
       },
-      orderId: formData.get('orderId') || 'CC_MOCK_' + Date.now(),
-      cardNumber: formData.get('cardNumber'),
-      cardExp: formData.get('cardExp'),
-      capturePaypal: formData.get('capturePaypal') === 'on',
+      orderId: paypalState.orderId || formData.get('orderId') || '',
+      capturePaypal: !paypalState.captured,
+      captureStatus: paypalState.status || null,
+      captureId: paypalState.captureId || null,
       amount: formData.get('amount'),
       currency: formData.get('currency'),
       termsAccepted: formData.get('termsAccepted') === 'on',
