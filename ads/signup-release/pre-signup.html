@@ -347,12 +347,12 @@
 
   async function initializePaypalForPreSignup() {
     const backendBase = getBackendBaseUrl();
-    const createSubscriptionPath = `${backendBase}/index.mjs/payments/create-subscription`;
+    const createSubscriptionPath = `${backendBase}/api/payments/create-subscription`;
 
     try {
       const paymentConfig = await fetchJsonWithFallback([
-        `${backendBase}/index.mjs/payments/config`,
-        `${backendBase}/api/payments/config`
+        `${backendBase}/api/payments/config`,
+        `${backendBase}/index.mjs/payments/config`
       ]);
 
       paypalState.configured = Boolean(paymentConfig?.enabled && paymentConfig?.clientId);
@@ -376,7 +376,7 @@
             async createOrder() {
               const role = document.getElementById('input-role').value || 'SUBSCRIBER';
               // Standard one-time payment for providers
-              const createOrderPath = `${backendBase}/index.mjs/payments/create-order`;
+              const createOrderPath = `${backendBase}/api/payments/create-order`;
               const payload = {
                 paymentKind: role === 'PROVIDER' ? 'provider-membership' : 'priority',
                 brand_name: 'AW Roadside',
@@ -549,35 +549,16 @@
     const endpoint = role === 'SUBSCRIBER' ? '/api/pre-signup/subscriber' : '/api/pre-signup/provider';
     const backendUrl = getBackendBaseUrl();
 
-    if ((formData.get('capturePaypal') === 'on') && !paypalState.captured && !data.orderId) {
-      // If card info is provided but no PayPal orderId/subscriptionId, 
-      // we need to tell the user they must still use the PayPal button or a real captured source.
-      if (!data.cardNumber) {
-        submitBtn.disabled = false;
-        feedback.className = 'feedback-box error';
-        feedback.innerText = 'Please complete PayPal approval first.';
-        return;
-      } else {
-        // Card data is present but we haven't implemented backend capture for raw cards yet.
-        // The user's goal is to NOT allow just card details to count as capture.
-        submitBtn.disabled = false;
-        feedback.className = 'feedback-box error';
-        feedback.innerText = 'Direct card processing is currently handled via the PayPal button "Debit or Credit Card" option. Please use that for immediate capture.';
-        return;
-      }
-    }
-
     // In some environments, we might be serving from a subpath or different origin
     // but the API is expected to be at /api or /index.mjs/api
     try {
-      let response;
-      try {
-        response = await fetch(backendUrl + endpoint, {
+      let response = await fetch(backendUrl + endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
-        });
-      } catch (e) {
+      });
+
+      if (!response.ok && response.status === 404) {
         // Fallback to /index.mjs prefix if direct /api fails (common in some proxy setups)
         response = await fetch(backendUrl + '/index.mjs' + endpoint, {
           method: 'POST',
