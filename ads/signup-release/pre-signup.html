@@ -345,13 +345,20 @@
         style: { shape: 'pill', layout: 'vertical', label: 'pay' },
         async createOrder() {
           const role = document.getElementById('input-role').value || 'SUBSCRIBER';
+          const fullName = document.querySelector('[name="fullName"]').value || '';
+          const phoneNumber = document.querySelector('[name="phoneNumber"]').value || '';
+          const zip = document.querySelector('[name="zip"]').value || '';
           const order = await fetchJsonWithFallback([
             `${backendBase}/api/payments/create-order`
           ], {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              paymentKind: role === 'PROVIDER' ? 'provider-membership' : 'priority',
+              paymentKind: 'pre-signup',
+              role,
+              fullName,
+              phoneNumber,
+              zip,
               brand_name: 'AW Roadside',
               description: `AW Roadside Pre-Signup Screening - ${role}`,
               application_context: {
