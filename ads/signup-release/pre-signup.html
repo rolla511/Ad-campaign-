@@ -98,6 +98,47 @@
   }
   .field-error .field-hint { display: block; }
   .field-error .field { border-color: #ff3e3e !important; box-shadow: 0 0 0 1px rgba(255,62,62,.35); }
+  .role-option {
+    appearance: none;
+    color: inherit;
+    font: inherit;
+    position: relative;
+    min-height: 150px;
+    border-radius: 12px;
+  }
+  .role-option::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.65);
+    background: rgba(0,0,0,0.2);
+  }
+  .role-option.active::before {
+    border-color: var(--yellow);
+    background: radial-gradient(circle, var(--yellow) 0 42%, transparent 48%);
+  }
+  .role-option:focus-visible {
+    outline: 3px solid var(--yellow);
+    outline-offset: 3px;
+  }
+  .role-choice-action {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 204, 0, 0.55);
+    color: var(--yellow);
+    font-weight: 800;
+    font-size: 0.9rem;
+  }
+  .role-option.active .role-choice-action {
+    background: var(--yellow);
+    color: #111;
+  }
   .role-selector.field-error .role-option {
     border-color: rgba(255, 62, 62, 0.75);
     box-shadow: 0 0 0 1px rgba(255,62,62,.35);
@@ -188,15 +229,17 @@
       <div class="guide-message" id="guide-message"><strong>Pilot tip:</strong> Choose your role, complete PayPal approval, then submit your pre-signup.</div>
     </div>
 
-    <div class="role-selector">
-      <div class="role-option" id="role-subscriber" onclick="selectRole('SUBSCRIBER')">
+    <div class="role-selector" aria-label="Choose signup option">
+      <button class="role-option" id="role-subscriber" type="button" onclick="selectRole('SUBSCRIBER')" aria-pressed="false">
         <h3>Subscriber</h3>
         <p class="muted">Looking for roadside service in your area.</p>
-      </div>
-      <div class="role-option" id="role-provider" onclick="selectRole('PROVIDER')">
+        <span class="role-choice-action">Choose Subscriber</span>
+      </button>
+      <button class="role-option" id="role-provider" type="button" onclick="selectRole('PROVIDER')" aria-pressed="false">
         <h3>Provider</h3>
         <p class="muted">Ready to provide roadside assistance.</p>
-      </div>
+        <span class="role-choice-action">Choose Provider</span>
+      </button>
     </div>
 
     <div id="confirmation-view" class="hidden" hidden>
@@ -324,8 +367,14 @@
   function selectRole(role) {
     const previousRole = document.getElementById('input-role').value;
     document.getElementById('input-role').value = role;
-    document.getElementById('role-subscriber').classList.toggle('active', role === 'SUBSCRIBER');
-    document.getElementById('role-provider').classList.toggle('active', role === 'PROVIDER');
+    const subscriberButton = document.getElementById('role-subscriber');
+    const providerButton = document.getElementById('role-provider');
+    subscriberButton.classList.toggle('active', role === 'SUBSCRIBER');
+    providerButton.classList.toggle('active', role === 'PROVIDER');
+    subscriberButton.setAttribute('aria-pressed', role === 'SUBSCRIBER' ? 'true' : 'false');
+    providerButton.setAttribute('aria-pressed', role === 'PROVIDER' ? 'true' : 'false');
+    subscriberButton.querySelector('.role-choice-action').innerText = role === 'SUBSCRIBER' ? 'Subscriber Selected' : 'Choose Subscriber';
+    providerButton.querySelector('.role-choice-action').innerText = role === 'PROVIDER' ? 'Provider Selected' : 'Choose Provider';
     document.querySelector('.role-selector').classList.remove('field-error');
     document.getElementById('form-title').innerText = role === 'SUBSCRIBER' ? 'Subscriber Information' : 'Provider Information';
     document.getElementById('provider-fields').classList.toggle('hidden', role === 'SUBSCRIBER');
