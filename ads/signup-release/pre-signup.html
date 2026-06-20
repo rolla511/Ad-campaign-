@@ -10,6 +10,10 @@
 <link rel="stylesheet" href="../../Aw-styles.css"/>
 <style>
   label { display: flex; flex-direction: column; gap: 8px; }
+  .pre-signup-container {
+    max-width: 756px;
+    width: calc(100% - 48px);
+  }
 
   .confirmation-screen {
     text-align: center;
@@ -94,6 +98,30 @@
   }
   .field-error .field-hint { display: block; }
   .field-error .field { border-color: #ff3e3e !important; box-shadow: 0 0 0 1px rgba(255,62,62,.35); }
+  .role-selector.field-error .role-option {
+    border-color: rgba(255, 62, 62, 0.75);
+    box-shadow: 0 0 0 1px rgba(255,62,62,.35);
+  }
+  .order-summary {
+    margin: 12px 0;
+    padding: 14px;
+    border: 1px solid rgba(255, 204, 0, 0.35);
+    border-radius: 8px;
+    background: rgba(255, 204, 0, 0.08);
+  }
+  .order-summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .order-summary-row:last-child { border-bottom: 0; }
+  .order-summary-total {
+    color: var(--yellow);
+    font-size: 1.2rem;
+    font-weight: 800;
+  }
 
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
@@ -174,11 +202,11 @@
     </div>
 
     <form class="panel form-grid" id="pre-signup-form">
-      <input type="hidden" name="role" id="input-role" value="SUBSCRIBER"/>
+      <input type="hidden" name="role" id="input-role" value=""/>
       <input type="hidden" name="amount" value="10.99"/>
       <input type="hidden" name="currency" value="USD"/>
 
-      <div class="full-span"><h3 id="form-title">Subscriber Information</h3></div>
+      <div class="full-span"><h3 id="form-title">Choose Signup Option</h3></div>
 
       <label><span>Full Name</span><input class="field" name="fullName" placeholder="Full Name" required/><small class="field-hint">Enter your legal full name.</small></label>
       <label><span>Email</span><input class="field" name="email" type="email" placeholder="email@example.com" required/><small class="field-hint">Use a valid email for confirmation and temporary password.</small></label>
@@ -201,7 +229,26 @@
 
       <div class="full-span">
         <h4>Payment Verification</h4>
-        <p class="muted">PayPal approval is required before submit. Processing and fund routing are handled securely server-side.</p>
+        <p class="muted">PayPal approval is required before submit. Review the purchase details below before continuing.</p>
+        <div class="order-summary" aria-label="Pre-signup purchase summary">
+          <div class="order-summary-row">
+            <span>Purchase</span>
+            <strong id="purchase-item-name">AW Roadside Pre-Signup Access</strong>
+          </div>
+          <div class="order-summary-row">
+            <span>Signup Option</span>
+            <strong id="purchase-role-label">Select Subscriber or Provider</strong>
+          </div>
+          <div class="order-summary-row">
+            <span>Billing Method</span>
+            <strong>PayPal secure checkout</strong>
+          </div>
+          <div class="order-summary-row order-summary-total">
+            <span>Total Due Today</span>
+            <strong id="purchase-total">$10.99 USD</strong>
+          </div>
+        </div>
+        <label class="toggle full-span"><input type="checkbox" name="paymentConsentAccepted" required/><span>I authorize AW Roadside to charge $10.99 USD through PayPal for this pre-signup access purchase.</span></label>
         <div id="paypal-payment-status" class="muted" style="margin-top: 8px;">Loading PayPal payment options…</div>
         <div id="paypal-button-container" style="margin-top: 12px;"></div>
       </div>
@@ -235,6 +282,8 @@
 <script>
   const PRODUCTION_BACKEND = 'https://awroadside-fire-backend.onrender.com';
   const TEMP_GENERIC_PASSWORD = 'Roadside2026!';
+  const PRE_SIGNUP_PRICE = '10.99';
+  const PRE_SIGNUP_CURRENCY = 'USD';
 
   const paypalState = {
     configured: false,
@@ -248,14 +297,86 @@
   };
 
   function selectRole(role) {
+    const previousRole = document.getElementById('input-role').value;
     document.getElementById('input-role').value = role;
     document.getElementById('role-subscriber').classList.toggle('active', role === 'SUBSCRIBER');
     document.getElementById('role-provider').classList.toggle('active', role === 'PROVIDER');
+    document.querySelector('.role-selector').classList.remove('field-error');
     document.getElementById('form-title').innerText = role === 'SUBSCRIBER' ? 'Subscriber Information' : 'Provider Information';
     document.getElementById('provider-fields').classList.toggle('hidden', role === 'SUBSCRIBER');
+    updatePurchaseSummary(role);
+    if (previousRole && previousRole !== role) {
+      paypalState.orderId = '';
+      paypalState.subscriptionId = '';
+      paypalState.captureId = '';
+      paypalState.captured = false;
+      paypalState.status = '';
+      paypalState.approved = false;
+      setPaypalStatus('Role changed. Complete PayPal approval again for the selected signup option.');
+    }
     setGuideMessage(role === 'SUBSCRIBER'
       ? 'Pilot tip: Subscriber selected. Complete PayPal approval, then submit.'
       : 'Pilot tip: Provider selected. Complete PayPal approval, then submit.');
+  }
+
+  function getSelectedRole() {
+    return document.getElementById('input-role').value;
+  }
+
+  function getRoleLabel(role = getSelectedRole()) {
+    if (role === 'PROVIDER') return 'Provider';
+    if (role === 'SUBSCRIBER') return 'Subscriber';
+    return 'Select Subscriber or Provider';
+  }
+
+  function getPurchaseDetails(role = getSelectedRole()) {
+    const roleLabel = getRoleLabel(role);
+    return {
+      itemName: 'AW Roadside Pre-Signup Access',
+      description: role === 'PROVIDER'
+        ? 'AW Roadside provider pre-signup access and logistics screening.'
+        : 'AW Roadside subscriber pre-signup access and logistics screening.',
+      role,
+      roleLabel,
+      amount: PRE_SIGNUP_PRICE,
+      currency: PRE_SIGNUP_CURRENCY,
+      totalLabel: `$${PRE_SIGNUP_PRICE} ${PRE_SIGNUP_CURRENCY}`,
+      billingMethod: 'PayPal secure checkout'
+    };
+  }
+
+  function updatePurchaseSummary(role = getSelectedRole()) {
+    const purchase = getPurchaseDetails(role);
+    const roleLabel = document.getElementById('purchase-role-label');
+    const total = document.getElementById('purchase-total');
+    const itemName = document.getElementById('purchase-item-name');
+    if (roleLabel) roleLabel.innerText = purchase.roleLabel;
+    if (total) total.innerText = purchase.totalLabel;
+    if (itemName) itemName.innerText = purchase.itemName;
+  }
+
+  function validateRoleSelection() {
+    const role = getSelectedRole();
+    const roleSelector = document.querySelector('.role-selector');
+    const isValid = role === 'SUBSCRIBER' || role === 'PROVIDER';
+    if (roleSelector) roleSelector.classList.toggle('field-error', !isValid);
+    if (!isValid) {
+      setGuideMessage('Choose Subscriber or Provider before continuing.');
+      setPaypalStatus('Select a signup option before PayPal approval.');
+    }
+    return isValid;
+  }
+
+  function validatePaymentConsent() {
+    const consent = document.querySelector('[name="paymentConsentAccepted"]');
+    const accepted = Boolean(consent?.checked);
+    const label = consent?.closest('label');
+    if (label) label.classList.toggle('field-error', !accepted);
+    if (!accepted) {
+      setGuideMessage('Review the $10.99 USD purchase details and authorize the PayPal charge before continuing.');
+      setPaypalStatus('Payment authorization is required before PayPal approval.');
+    }
+    return accepted;
   }
 
   function setGuideMessage(message) {
@@ -340,14 +461,21 @@
         return;
       }
 
-      setPaypalStatus('Complete PayPal approval to enable pre-signup submission.');
+      setPaypalStatus('Select Subscriber or Provider, then complete PayPal approval.');
       window.paypal.Buttons({
         style: { shape: 'pill', layout: 'vertical', label: 'pay' },
         async createOrder() {
-          const role = document.getElementById('input-role').value || 'SUBSCRIBER';
+          if (!validateRoleSelection()) {
+            throw new Error('Choose Subscriber or Provider before PayPal approval.');
+          }
+          if (!validatePaymentConsent()) {
+            throw new Error('Authorize the $10.99 USD PayPal charge before continuing.');
+          }
+          const role = getSelectedRole();
           const fullName = document.querySelector('[name="fullName"]').value || '';
           const phoneNumber = document.querySelector('[name="phoneNumber"]').value || '';
           const zip = document.querySelector('[name="zip"]').value || '';
+          const purchase = getPurchaseDetails(role);
           const order = await fetchJsonWithFallback([
             `${backendBase}/api/payments/create-order`
           ], {
@@ -359,8 +487,11 @@
               fullName,
               phoneNumber,
               zip,
+              amount: purchase.amount,
+              currency: purchase.currency,
+              purchase,
               brand_name: 'AW Roadside',
-              description: `AW Roadside Pre-Signup Screening - ${role}`,
+              description: purchase.description,
               application_context: {
                 brand_name: 'AW Roadside',
                 shipping_preference: 'NO_SHIPPING',
@@ -436,6 +567,14 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    if (!validateRoleSelection()) {
+      return;
+    }
+
+    if (!validatePaymentConsent()) {
+      return;
+    }
+
     if (!paypalState.approved) {
       setPaypalStatus('PayPal approval is required before submit.');
       setGuideMessage('Approve PayPal first, then submit pre-signup.');
@@ -454,6 +593,7 @@
 
     const formData = new FormData(form);
     const role = formData.get('role');
+    const purchase = getPurchaseDetails(role);
     const data = {
       role,
       fullName: formData.get('fullName'),
@@ -473,8 +613,23 @@
       capturePaypal: true,
       captureStatus: paypalState.status || 'APPROVED',
       captureId: paypalState.captureId || null,
-      amount: formData.get('amount'),
-      currency: formData.get('currency'),
+      amount: purchase.amount,
+      currency: purchase.currency,
+      purchase,
+      payment: {
+        provider: 'paypal',
+        paymentKind: 'pre-signup',
+        orderId: paypalState.orderId || '',
+        captureId: paypalState.captureId || null,
+        status: paypalState.status || 'APPROVED',
+        amount: {
+          currency: purchase.currency,
+          value: purchase.amount
+        },
+        consentAccepted: formData.get('paymentConsentAccepted') === 'on',
+        consentText: `I authorize AW Roadside to charge ${purchase.totalLabel} through PayPal for this pre-signup access purchase.`
+      },
+      paymentConsentAccepted: formData.get('paymentConsentAccepted') === 'on',
       termsAccepted: formData.get('termsAccepted') === 'on',
       storeEmail: formData.get('storeEmail'),
       earlyTestingConsent: formData.get('earlyTestingConsent') === 'yes',
