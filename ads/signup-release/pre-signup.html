@@ -122,6 +122,15 @@
     font-size: 1.2rem;
     font-weight: 800;
   }
+  .payment-method-note {
+    margin: 10px 0 12px;
+    padding: 12px;
+    border-left: 3px solid var(--yellow);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
 
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
@@ -241,15 +250,31 @@
           </div>
           <div class="order-summary-row">
             <span>Billing Method</span>
-            <strong>PayPal secure checkout</strong>
+            <strong id="purchase-payment-method">Choose payment method</strong>
           </div>
           <div class="order-summary-row order-summary-total">
             <span>Total Due Today</span>
             <strong id="purchase-total">$10.99 USD</strong>
           </div>
         </div>
+        <label class="full-span">
+          <span>How do you want to pay?</span>
+          <select class="field" name="paymentMethodIntent" required>
+            <option value="">Select a payment method</option>
+            <option value="paypal">PayPal account</option>
+            <option value="debit_card">Debit card in PayPal secure checkout</option>
+            <option value="credit_card">Credit card in PayPal secure checkout</option>
+            <option value="venmo">Venmo in PayPal secure checkout</option>
+            <option value="apple_pay">Apple Pay in PayPal secure checkout</option>
+            <option value="google_pay">Google Pay in PayPal secure checkout</option>
+          </select>
+          <small class="field-hint">Choose how you plan to pay before clicking the secure checkout button.</small>
+        </label>
+        <div class="payment-method-note">
+          Select your payment method, accept the charge, then use the secure checkout buttons below. The PayPal checkout window is where you enter PayPal account, debit card, credit card, Venmo, Apple Pay, or Google Pay information. AW Roadside does not collect or store raw card numbers on this form.
+        </div>
         <label class="toggle full-span"><input type="checkbox" name="paymentConsentAccepted" required/><span>I authorize AW Roadside to charge $10.99 USD through PayPal for this pre-signup access purchase.</span></label>
-        <div id="paypal-payment-status" class="muted" style="margin-top: 8px;">Loading PayPal payment options…</div>
+        <div id="paypal-payment-status" class="muted" style="margin-top: 8px;">Loading secure checkout options…</div>
         <div id="paypal-button-container" style="margin-top: 12px;"></div>
       </div>
 
@@ -329,8 +354,25 @@
     return 'Select Subscriber or Provider';
   }
 
+  function getSelectedPaymentMethod() {
+    return document.querySelector('[name="paymentMethodIntent"]')?.value || '';
+  }
+
+  function getPaymentMethodLabel(method = getSelectedPaymentMethod()) {
+    const labels = {
+      paypal: 'PayPal account',
+      debit_card: 'Debit card in PayPal secure checkout',
+      credit_card: 'Credit card in PayPal secure checkout',
+      venmo: 'Venmo in PayPal secure checkout',
+      apple_pay: 'Apple Pay in PayPal secure checkout',
+      google_pay: 'Google Pay in PayPal secure checkout'
+    };
+    return labels[method] || 'Choose payment method';
+  }
+
   function getPurchaseDetails(role = getSelectedRole()) {
     const roleLabel = getRoleLabel(role);
+    const paymentMethodIntent = getSelectedPaymentMethod();
     return {
       itemName: 'AW Roadside Pre-Signup Access',
       description: role === 'PROVIDER'
@@ -341,7 +383,8 @@
       amount: PRE_SIGNUP_PRICE,
       currency: PRE_SIGNUP_CURRENCY,
       totalLabel: `$${PRE_SIGNUP_PRICE} ${PRE_SIGNUP_CURRENCY}`,
-      billingMethod: 'PayPal secure checkout'
+      billingMethod: getPaymentMethodLabel(paymentMethodIntent),
+      paymentMethodIntent
     };
   }
 
@@ -350,9 +393,11 @@
     const roleLabel = document.getElementById('purchase-role-label');
     const total = document.getElementById('purchase-total');
     const itemName = document.getElementById('purchase-item-name');
+    const paymentMethod = document.getElementById('purchase-payment-method');
     if (roleLabel) roleLabel.innerText = purchase.roleLabel;
     if (total) total.innerText = purchase.totalLabel;
     if (itemName) itemName.innerText = purchase.itemName;
+    if (paymentMethod) paymentMethod.innerText = purchase.billingMethod;
   }
 
   function validateRoleSelection() {
@@ -377,6 +422,18 @@
       setPaypalStatus('Payment authorization is required before PayPal approval.');
     }
     return accepted;
+  }
+
+  function validatePaymentMethod() {
+    const paymentMethod = document.querySelector('[name="paymentMethodIntent"]');
+    const selected = Boolean(paymentMethod?.value);
+    const label = paymentMethod?.closest('label');
+    if (label) label.classList.toggle('field-error', !selected);
+    if (!selected) {
+      setGuideMessage('Choose how you want to pay before opening secure checkout.');
+      setPaypalStatus('Select PayPal, debit card, credit card, Venmo, Apple Pay, or Google Pay before approval.');
+    }
+    return selected;
   }
 
   function setGuideMessage(message) {
@@ -429,7 +486,7 @@
         return;
       }
       const script = document.createElement('script');
-      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&intent=capture&vault=true`;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&intent=capture&vault=true&enable-funding=venmo,paylater,card`;
       script.async = true;
       script.dataset.paypalSdk = 'true';
       script.onload = () => resolve();
@@ -461,12 +518,22 @@
         return;
       }
 
-      setPaypalStatus('Select Subscriber or Provider, then complete PayPal approval.');
+      setPaypalStatus('Select signup and payment options, then click a secure checkout button below.');
       window.paypal.Buttons({
         style: { shape: 'pill', layout: 'vertical', label: 'pay' },
+        onClick(data, actions) {
+          if (!validateRoleSelection() || !validatePaymentMethod() || !validatePaymentConsent()) {
+            return actions.reject();
+          }
+          setPaypalStatus('Opening PayPal secure checkout. Enter your selected payment information in the checkout window.');
+          return actions.resolve();
+        },
         async createOrder() {
           if (!validateRoleSelection()) {
             throw new Error('Choose Subscriber or Provider before PayPal approval.');
+          }
+          if (!validatePaymentMethod()) {
+            throw new Error('Choose a payment method before PayPal approval.');
           }
           if (!validatePaymentConsent()) {
             throw new Error('Authorize the $10.99 USD PayPal charge before continuing.');
@@ -490,6 +557,7 @@
               amount: purchase.amount,
               currency: purchase.currency,
               purchase,
+              paymentMethodIntent: purchase.paymentMethodIntent,
               brand_name: 'AW Roadside',
               description: purchase.description,
               application_context: {
@@ -560,6 +628,16 @@
   document.getElementById('pre-signup-form').querySelector('[name="earlyTestingConsent"]').addEventListener('change', function(e) {
     document.getElementById('testing-email-container').classList.toggle('hidden', e.target.value !== 'yes');
   });
+  document.getElementById('pre-signup-form').querySelector('[name="paymentMethodIntent"]').addEventListener('change', function() {
+    updatePurchaseSummary();
+    paypalState.orderId = '';
+    paypalState.subscriptionId = '';
+    paypalState.captureId = '';
+    paypalState.captured = false;
+    paypalState.status = '';
+    paypalState.approved = false;
+    setPaypalStatus('Payment method updated. Click a secure checkout button below to enter payment information.');
+  });
 
   initializePaypalForPreSignup();
 
@@ -568,6 +646,10 @@
     e.preventDefault();
 
     if (!validateRoleSelection()) {
+      return;
+    }
+
+    if (!validatePaymentMethod()) {
       return;
     }
 
@@ -619,6 +701,8 @@
       payment: {
         provider: 'paypal',
         paymentKind: 'pre-signup',
+        methodIntent: purchase.paymentMethodIntent,
+        methodLabel: purchase.billingMethod,
         orderId: paypalState.orderId || '',
         captureId: paypalState.captureId || null,
         status: paypalState.status || 'APPROVED',
@@ -629,6 +713,8 @@
         consentAccepted: formData.get('paymentConsentAccepted') === 'on',
         consentText: `I authorize AW Roadside to charge ${purchase.totalLabel} through PayPal for this pre-signup access purchase.`
       },
+      paymentMethodIntent: purchase.paymentMethodIntent,
+      paymentMethodLabel: purchase.billingMethod,
       paymentConsentAccepted: formData.get('paymentConsentAccepted') === 'on',
       termsAccepted: formData.get('termsAccepted') === 'on',
       storeEmail: formData.get('storeEmail'),
