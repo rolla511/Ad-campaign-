@@ -122,6 +122,38 @@
     cursor: not-allowed;
     filter: grayscale(0.5);
   }
+
+  .paypal-plan-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    margin-top: 14px;
+  }
+
+  .paypal-plan-panel {
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 12px;
+    padding: 14px;
+    background: rgba(17,17,17,.82);
+  }
+
+  .paypal-plan-panel.active {
+    border-color: rgba(255,204,0,.7);
+    box-shadow: 0 0 18px rgba(255,204,0,.14);
+  }
+
+  .paypal-plan-panel h5 {
+    margin: 0 0 6px;
+    color: var(--yellow);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.25rem;
+  }
+
+  .paypal-plan-panel p {
+    margin: 0 0 12px;
+    color: #cfcfcf;
+    font-size: .88rem;
+  }
 </style>
 </head>
 <body>
@@ -175,8 +207,6 @@
 
     <form class="panel form-grid" id="pre-signup-form">
       <input type="hidden" name="role" id="input-role" value="SUBSCRIBER"/>
-      <input type="hidden" name="amount" value="10.99"/>
-      <input type="hidden" name="currency" value="USD"/>
 
       <div class="full-span"><h3 id="form-title">Subscriber Information</h3></div>
 
@@ -203,7 +233,18 @@
         <h4>Payment Verification</h4>
         <p class="muted">PayPal approval is required before submit. Processing and fund routing are handled securely server-side.</p>
         <div id="paypal-payment-status" class="muted" style="margin-top: 8px;">Loading PayPal payment options…</div>
-        <div id="paypal-button-container" style="margin-top: 12px;"></div>
+        <div class="paypal-plan-grid" aria-label="PayPal subscription options">
+          <div class="paypal-plan-panel active" id="paypal-plan-subscriber">
+            <h5>Subscriber Plan</h5>
+            <p>Use this approval for customer roadside membership.</p>
+            <div id="paypal-button-container-subscriber"></div>
+          </div>
+          <div class="paypal-plan-panel" id="paypal-plan-provider">
+            <h5>Provider Plan</h5>
+            <p>Use this approval for roadside provider onboarding.</p>
+            <div id="paypal-button-container-provider"></div>
+          </div>
+        </div>
       </div>
 
       <div class="full-span" style="border-top: 1px solid #333; margin-top: 10px; padding-top: 10px;">
@@ -240,6 +281,7 @@
     SUBSCRIBER: 'P-24R12418JB726551MNI3SOVA',
     PROVIDER: 'P-5MA53832KU627993ENI3STPA'
   };
+  const SUBSCRIBER_PRE_SIGNUP_CHARGE = '10.99';
 
   const paypalState = {
     configured: false,
@@ -251,7 +293,8 @@
     status: '',
     approved: false,
     planId: '',
-    role: 'SUBSCRIBER'
+    role: 'SUBSCRIBER',
+    renderedRoles: {}
   };
 
   function selectRole(role) {
@@ -263,12 +306,15 @@
     paypalState.approved = false;
     paypalState.subscriptionId = '';
     paypalState.orderId = '';
+    paypalState.captureId = '';
+    paypalState.status = '';
     paypalState.planId = PAYPAL_SUBSCRIPTION_PLANS[role] || PAYPAL_SUBSCRIPTION_PLANS.SUBSCRIBER;
     paypalState.role = role;
     setGuideMessage(role === 'SUBSCRIBER'
       ? 'Pilot tip: Subscriber selected. Complete PayPal approval, then submit.'
       : 'Pilot tip: Provider selected. Complete PayPal approval, then submit.');
-    renderPaypalSubscriptionButton();
+    syncPaypalPlanPanels();
+    renderPaypalSubscriptionButtons();
   }
 
   function setGuideMessage(message) {
@@ -330,16 +376,26 @@
     });
   }
 
-  function renderPaypalSubscriptionButton() {
-    const container = document.getElementById('paypal-button-container');
-    if (!container || !window.paypal || !window.paypal.Buttons) return;
-
+  function syncPaypalPlanPanels() {
     const role = document.getElementById('input-role').value || 'SUBSCRIBER';
+    document.getElementById('paypal-plan-subscriber')?.classList.toggle('active', role === 'SUBSCRIBER');
+    document.getElementById('paypal-plan-provider')?.classList.toggle('active', role === 'PROVIDER');
+  }
+
+  function renderPaypalSubscriptionButtons() {
+    renderPaypalSubscriptionButtonForRole('SUBSCRIBER', '#paypal-button-container-subscriber');
+    renderPaypalSubscriptionButtonForRole('PROVIDER', '#paypal-button-container-provider');
+    syncPaypalPlanPanels();
+  }
+
+  function renderPaypalSubscriptionButtonForRole(role, selector) {
+    const container = document.querySelector(selector);
+    if (!container || !window.paypal || !window.paypal.Buttons || paypalState.renderedRoles[role]) return;
+
     const planId = PAYPAL_SUBSCRIPTION_PLANS[role] || PAYPAL_SUBSCRIPTION_PLANS.SUBSCRIBER;
-    paypalState.planId = planId;
-    paypalState.role = role;
     container.innerHTML = '';
-    setPaypalStatus(`${role === 'PROVIDER' ? 'Provider' : 'Subscriber'} PayPal subscription approval is required before submit.`);
+    paypalState.renderedRoles[role] = true;
+    setPaypalStatus('Choose the matching Subscriber or Provider PayPal subscription before submit.');
 
     window.paypal.Buttons({
       style: {
@@ -358,12 +414,20 @@
         if (!subscriptionId) {
           throw new Error('No PayPal subscription ID returned.');
         }
+        document.getElementById('input-role').value = role;
+        document.getElementById('role-subscriber').classList.toggle('active', role === 'SUBSCRIBER');
+        document.getElementById('role-provider').classList.toggle('active', role === 'PROVIDER');
+        document.getElementById('form-title').innerText = role === 'SUBSCRIBER' ? 'Subscriber Information' : 'Provider Information';
+        document.getElementById('provider-fields').classList.toggle('hidden', role === 'SUBSCRIBER');
         paypalState.subscriptionId = subscriptionId;
         paypalState.orderId = '';
-        paypalState.captureId = subscriptionId;
+        paypalState.captureId = '';
         paypalState.status = 'APPROVED';
         paypalState.approved = true;
         paypalState.captured = false;
+        paypalState.planId = planId;
+        paypalState.role = role;
+        syncPaypalPlanPanels();
         setPaypalStatus(`PayPal subscription approved: ${subscriptionId}`);
         setGuideMessage('PayPal subscription approved. Submit the form to complete your pending profile setup.');
       },
@@ -377,7 +441,7 @@
         setPaypalStatus(`PayPal failed: ${error?.message || 'Unknown error'}`);
         setGuideMessage('PayPal hit an error. Please retry the subscription button.');
       }
-    }).render('#paypal-button-container');
+    }).render(selector);
   }
 
   async function initializePaypalForPreSignup() {
@@ -409,7 +473,7 @@
         return;
       }
 
-      renderPaypalSubscriptionButton();
+      renderPaypalSubscriptionButtons();
     } catch (error) {
       setPaypalStatus(`Unable to initialize PayPal: ${error.message}`);
       setGuideMessage('Could not initialize PayPal. Please refresh and try again.');
@@ -445,6 +509,8 @@
     document.getElementById('testing-email-container').classList.toggle('hidden', e.target.value !== 'yes');
   });
 
+  const initialRole = new URLSearchParams(window.location.search).get('role');
+  selectRole(String(initialRole || 'SUBSCRIBER').toUpperCase() === 'PROVIDER' ? 'PROVIDER' : 'SUBSCRIBER');
   initializePaypalForPreSignup();
 
   const form = document.getElementById('pre-signup-form');
@@ -469,6 +535,8 @@
 
     const formData = new FormData(form);
     const role = formData.get('role');
+    const isSubscriber = role === 'SUBSCRIBER';
+    const subscriberAmount = isSubscriber ? SUBSCRIBER_PRE_SIGNUP_CHARGE : '';
     const data = {
       role,
       fullName: formData.get('fullName'),
@@ -491,6 +559,8 @@
       capturePaypal: false,
       captureStatus: paypalState.status || 'APPROVED',
       captureId: paypalState.captureId || null,
+      subscriptionOnly: role === 'PROVIDER',
+      paymentKind: role === 'PROVIDER' ? 'provider-webhook-subscription' : 'subscriber-pre-signup-charge',
       paypal: {
         subscriptionId: paypalState.subscriptionId || '',
         planId: paypalState.planId || '',
@@ -498,11 +568,14 @@
       },
       payment: {
         subscriptionId: paypalState.subscriptionId || '',
+        planId: paypalState.planId || '',
         status: paypalState.status || 'APPROVED',
-        amount: formData.get('amount')
+        type: role === 'PROVIDER' ? 'provider-subscription' : 'subscriber-charge',
+        amount: subscriberAmount || undefined,
+        currency: isSubscriber ? 'USD' : undefined
       },
-      amount: formData.get('amount'),
-      currency: formData.get('currency'),
+      amount: subscriberAmount || undefined,
+      currency: isSubscriber ? 'USD' : undefined,
       termsAccepted: formData.get('termsAccepted') === 'on',
       storeEmail: formData.get('storeEmail'),
       earlyTestingConsent: formData.get('earlyTestingConsent') === 'yes',
