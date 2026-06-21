@@ -123,33 +123,33 @@
     filter: grayscale(0.5);
   }
 
-  .paypal-plan-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 14px;
-    margin-top: 14px;
+  .role-option {
+    appearance: none;
+    color: inherit;
+    font: inherit;
   }
 
-  .paypal-plan-panel {
+  .role-option:focus-visible {
+    outline: 3px solid var(--yellow);
+    outline-offset: 4px;
+  }
+
+  .selected-paypal-plan {
     border: 1px solid rgba(255,255,255,.14);
     border-radius: 12px;
     padding: 14px;
     background: rgba(17,17,17,.82);
+    margin-top: 14px;
   }
 
-  .paypal-plan-panel.active {
-    border-color: rgba(255,204,0,.7);
-    box-shadow: 0 0 18px rgba(255,204,0,.14);
-  }
-
-  .paypal-plan-panel h5 {
+  .selected-paypal-plan h5 {
     margin: 0 0 6px;
     color: var(--yellow);
     font-family: 'Rajdhani', sans-serif;
     font-size: 1.25rem;
   }
 
-  .paypal-plan-panel p {
+  .selected-paypal-plan p {
     margin: 0 0 12px;
     color: #cfcfcf;
     font-size: .88rem;
@@ -184,14 +184,14 @@
     </div>
 
     <div class="role-selector">
-      <div class="role-option" id="role-subscriber" onclick="selectRole('SUBSCRIBER')">
+      <button class="role-option" id="role-subscriber" type="button" onclick="selectRole('SUBSCRIBER')" aria-pressed="true">
         <h3>Subscriber</h3>
         <p class="muted">Looking for roadside service in your area.</p>
-      </div>
-      <div class="role-option" id="role-provider" onclick="selectRole('PROVIDER')">
+      </button>
+      <button class="role-option" id="role-provider" type="button" onclick="selectRole('PROVIDER')" aria-pressed="false">
         <h3>Provider</h3>
         <p class="muted">Ready to provide roadside assistance.</p>
-      </div>
+      </button>
     </div>
 
     <div id="confirmation-view" class="hidden" hidden>
@@ -233,17 +233,10 @@
         <h4>Payment Verification</h4>
         <p class="muted">PayPal approval is required before submit. Processing and fund routing are handled securely server-side.</p>
         <div id="paypal-payment-status" class="muted" style="margin-top: 8px;">Loading PayPal payment options…</div>
-        <div class="paypal-plan-grid" aria-label="PayPal subscription options">
-          <div class="paypal-plan-panel active" id="paypal-plan-subscriber">
-            <h5>Subscriber Plan</h5>
-            <p>Use this approval for customer roadside membership.</p>
-            <div id="paypal-button-container-subscriber"></div>
-          </div>
-          <div class="paypal-plan-panel" id="paypal-plan-provider">
-            <h5>Provider Plan</h5>
-            <p>Use this approval for roadside provider onboarding.</p>
-            <div id="paypal-button-container-provider"></div>
-          </div>
+        <div class="selected-paypal-plan" aria-live="polite">
+          <h5 id="paypal-plan-title">Subscriber Plan</h5>
+          <p id="paypal-plan-description">Use this approval for customer roadside membership.</p>
+          <div id="paypal-button-container" style="margin-top: 12px;"></div>
         </div>
       </div>
 
@@ -293,14 +286,15 @@
     status: '',
     approved: false,
     planId: '',
-    role: 'SUBSCRIBER',
-    renderedRoles: {}
+    role: 'SUBSCRIBER'
   };
 
   function selectRole(role) {
     document.getElementById('input-role').value = role;
     document.getElementById('role-subscriber').classList.toggle('active', role === 'SUBSCRIBER');
     document.getElementById('role-provider').classList.toggle('active', role === 'PROVIDER');
+    document.getElementById('role-subscriber').setAttribute('aria-pressed', String(role === 'SUBSCRIBER'));
+    document.getElementById('role-provider').setAttribute('aria-pressed', String(role === 'PROVIDER'));
     document.getElementById('form-title').innerText = role === 'SUBSCRIBER' ? 'Subscriber Information' : 'Provider Information';
     document.getElementById('provider-fields').classList.toggle('hidden', role === 'SUBSCRIBER');
     paypalState.approved = false;
@@ -313,8 +307,8 @@
     setGuideMessage(role === 'SUBSCRIBER'
       ? 'Pilot tip: Subscriber selected. Complete PayPal approval, then submit.'
       : 'Pilot tip: Provider selected. Complete PayPal approval, then submit.');
-    syncPaypalPlanPanels();
-    renderPaypalSubscriptionButtons();
+    updateSelectedPlanText(role);
+    renderPaypalSubscriptionButton();
   }
 
   function setGuideMessage(message) {
@@ -376,26 +370,28 @@
     });
   }
 
-  function syncPaypalPlanPanels() {
+  function updateSelectedPlanText(role) {
+    const planTitle = document.getElementById('paypal-plan-title');
+    const planDescription = document.getElementById('paypal-plan-description');
+    if (planTitle) planTitle.innerText = role === 'PROVIDER' ? 'Provider Plan' : 'Subscriber Plan';
+    if (planDescription) {
+      planDescription.innerText = role === 'PROVIDER'
+        ? 'Use this approval for roadside provider onboarding.'
+        : 'Use this approval for customer roadside membership.';
+    }
+  }
+
+  function renderPaypalSubscriptionButton() {
+    const container = document.getElementById('paypal-button-container');
+    if (!container || !window.paypal || !window.paypal.Buttons) return;
+
     const role = document.getElementById('input-role').value || 'SUBSCRIBER';
-    document.getElementById('paypal-plan-subscriber')?.classList.toggle('active', role === 'SUBSCRIBER');
-    document.getElementById('paypal-plan-provider')?.classList.toggle('active', role === 'PROVIDER');
-  }
-
-  function renderPaypalSubscriptionButtons() {
-    renderPaypalSubscriptionButtonForRole('SUBSCRIBER', '#paypal-button-container-subscriber');
-    renderPaypalSubscriptionButtonForRole('PROVIDER', '#paypal-button-container-provider');
-    syncPaypalPlanPanels();
-  }
-
-  function renderPaypalSubscriptionButtonForRole(role, selector) {
-    const container = document.querySelector(selector);
-    if (!container || !window.paypal || !window.paypal.Buttons || paypalState.renderedRoles[role]) return;
-
     const planId = PAYPAL_SUBSCRIPTION_PLANS[role] || PAYPAL_SUBSCRIPTION_PLANS.SUBSCRIBER;
+    updateSelectedPlanText(role);
     container.innerHTML = '';
-    paypalState.renderedRoles[role] = true;
-    setPaypalStatus('Choose the matching Subscriber or Provider PayPal subscription before submit.');
+    paypalState.planId = planId;
+    paypalState.role = role;
+    setPaypalStatus(`${role === 'PROVIDER' ? 'Provider' : 'Subscriber'} PayPal subscription approval is required before submit.`);
 
     window.paypal.Buttons({
       style: {
@@ -417,6 +413,8 @@
         document.getElementById('input-role').value = role;
         document.getElementById('role-subscriber').classList.toggle('active', role === 'SUBSCRIBER');
         document.getElementById('role-provider').classList.toggle('active', role === 'PROVIDER');
+        document.getElementById('role-subscriber').setAttribute('aria-pressed', String(role === 'SUBSCRIBER'));
+        document.getElementById('role-provider').setAttribute('aria-pressed', String(role === 'PROVIDER'));
         document.getElementById('form-title').innerText = role === 'SUBSCRIBER' ? 'Subscriber Information' : 'Provider Information';
         document.getElementById('provider-fields').classList.toggle('hidden', role === 'SUBSCRIBER');
         paypalState.subscriptionId = subscriptionId;
@@ -427,7 +425,6 @@
         paypalState.captured = false;
         paypalState.planId = planId;
         paypalState.role = role;
-        syncPaypalPlanPanels();
         setPaypalStatus(`PayPal subscription approved: ${subscriptionId}`);
         setGuideMessage('PayPal subscription approved. Submit the form to complete your pending profile setup.');
       },
@@ -441,7 +438,7 @@
         setPaypalStatus(`PayPal failed: ${error?.message || 'Unknown error'}`);
         setGuideMessage('PayPal hit an error. Please retry the subscription button.');
       }
-    }).render(selector);
+    }).render('#paypal-button-container');
   }
 
   async function initializePaypalForPreSignup() {
@@ -473,7 +470,7 @@
         return;
       }
 
-      renderPaypalSubscriptionButtons();
+      renderPaypalSubscriptionButton();
     } catch (error) {
       setPaypalStatus(`Unable to initialize PayPal: ${error.message}`);
       setGuideMessage('Could not initialize PayPal. Please refresh and try again.');
