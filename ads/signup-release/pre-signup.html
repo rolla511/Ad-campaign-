@@ -10,6 +10,10 @@
 <link rel="stylesheet" href="../../Aw-styles.css"/>
 <style>
   label { display: flex; flex-direction: column; gap: 8px; }
+  .pre-signup-container {
+    max-width: 756px;
+    width: calc(100% - 48px);
+  }
 
   .confirmation-screen {
     text-align: center;
@@ -94,6 +98,80 @@
   }
   .field-error .field-hint { display: block; }
   .field-error .field { border-color: #ff3e3e !important; box-shadow: 0 0 0 1px rgba(255,62,62,.35); }
+  .role-option {
+    appearance: none;
+    color: inherit;
+    font: inherit;
+    position: relative;
+    min-height: 150px;
+    border-radius: 12px;
+  }
+  .role-option::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.65);
+    background: rgba(0,0,0,0.2);
+  }
+  .role-option.active::before {
+    border-color: var(--yellow);
+    background: radial-gradient(circle, var(--yellow) 0 42%, transparent 48%);
+  }
+  .role-option:focus-visible {
+    outline: 3px solid var(--yellow);
+    outline-offset: 3px;
+  }
+  .role-choice-action {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 204, 0, 0.55);
+    color: var(--yellow);
+    font-weight: 800;
+    font-size: 0.9rem;
+  }
+  .role-option.active .role-choice-action {
+    background: var(--yellow);
+    color: #111;
+  }
+  .role-selector.field-error .role-option {
+    border-color: rgba(255, 62, 62, 0.75);
+    box-shadow: 0 0 0 1px rgba(255,62,62,.35);
+  }
+  .order-summary {
+    margin: 12px 0;
+    padding: 14px;
+    border: 1px solid rgba(255, 204, 0, 0.35);
+    border-radius: 8px;
+    background: rgba(255, 204, 0, 0.08);
+  }
+  .order-summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .order-summary-row:last-child { border-bottom: 0; }
+  .order-summary-total {
+    color: var(--yellow);
+    font-size: 1.2rem;
+    font-weight: 800;
+  }
+  .payment-method-note {
+    margin: 10px 0 12px;
+    padding: 12px;
+    border-left: 3px solid var(--yellow);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
 
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
@@ -121,38 +199,6 @@
     opacity: 0.6;
     cursor: not-allowed;
     filter: grayscale(0.5);
-  }
-
-  .role-option {
-    appearance: none;
-    color: inherit;
-    font: inherit;
-  }
-
-  .role-option:focus-visible {
-    outline: 3px solid var(--yellow);
-    outline-offset: 4px;
-  }
-
-  .selected-paypal-plan {
-    border: 1px solid rgba(255,255,255,.14);
-    border-radius: 12px;
-    padding: 14px;
-    background: rgba(17,17,17,.82);
-    margin-top: 14px;
-  }
-
-  .selected-paypal-plan h5 {
-    margin: 0 0 6px;
-    color: var(--yellow);
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.25rem;
-  }
-
-  .selected-paypal-plan p {
-    margin: 0 0 12px;
-    color: #cfcfcf;
-    font-size: .88rem;
   }
 </style>
 </head>
@@ -183,14 +229,16 @@
       <div class="guide-message" id="guide-message"><strong>Pilot tip:</strong> Choose your role, complete PayPal approval, then submit your pre-signup.</div>
     </div>
 
-    <div class="role-selector">
-      <button class="role-option" id="role-subscriber" type="button" onclick="selectRole('SUBSCRIBER')" aria-pressed="true">
+    <div class="role-selector" aria-label="Choose signup option">
+      <button class="role-option" id="role-subscriber" type="button" onclick="selectRole('SUBSCRIBER')" aria-pressed="false">
         <h3>Subscriber</h3>
         <p class="muted">Looking for roadside service in your area.</p>
+        <span class="role-choice-action">Choose Subscriber</span>
       </button>
       <button class="role-option" id="role-provider" type="button" onclick="selectRole('PROVIDER')" aria-pressed="false">
         <h3>Provider</h3>
         <p class="muted">Ready to provide roadside assistance.</p>
+        <span class="role-choice-action">Choose Provider</span>
       </button>
     </div>
 
@@ -200,15 +248,18 @@
         <h2>Pre-Signup Received</h2>
         <p>Thank you for joining AW Roadside. Your intake is complete, your temporary password will be emailed, and your profile remains pending completion until release.</p>
         <div class="id-badge" id="display-intake-id"></div>
+        <p id="display-email-status" style="font-size: 0.95rem; color: #ddd;"></p>
         <p style="font-size: 0.9rem; color: #aaa;">You will be redirected shortly.</p>
         <button class="glow-button" onclick="window.location.reload()">Finish</button>
       </div>
     </div>
 
     <form class="panel form-grid" id="pre-signup-form">
-      <input type="hidden" name="role" id="input-role" value="SUBSCRIBER"/>
+      <input type="hidden" name="role" id="input-role" value=""/>
+      <input type="hidden" name="amount" value="10.99"/>
+      <input type="hidden" name="currency" value="USD"/>
 
-      <div class="full-span"><h3 id="form-title">Subscriber Information</h3></div>
+      <div class="full-span"><h3 id="form-title">Choose Signup Option</h3></div>
 
       <label><span>Full Name</span><input class="field" name="fullName" placeholder="Full Name" required/><small class="field-hint">Enter your legal full name.</small></label>
       <label><span>Email</span><input class="field" name="email" type="email" placeholder="email@example.com" required/><small class="field-hint">Use a valid email for confirmation and temporary password.</small></label>
@@ -231,13 +282,44 @@
 
       <div class="full-span">
         <h4>Payment Verification</h4>
-        <p class="muted">PayPal approval is required before submit. Processing and fund routing are handled securely server-side.</p>
-        <div id="paypal-payment-status" class="muted" style="margin-top: 8px;">Loading PayPal payment options…</div>
-        <div class="selected-paypal-plan" aria-live="polite">
-          <h5 id="paypal-plan-title">Subscriber Plan</h5>
-          <p id="paypal-plan-description">Use this approval for customer roadside membership.</p>
-          <div id="paypal-button-container" style="margin-top: 12px;"></div>
+        <p class="muted">PayPal approval is required before submit. Review the purchase details below before continuing.</p>
+        <div class="order-summary" aria-label="Pre-signup purchase summary">
+          <div class="order-summary-row">
+            <span>Purchase</span>
+            <strong id="purchase-item-name">AW Roadside Pre-Signup Access</strong>
+          </div>
+          <div class="order-summary-row">
+            <span>Signup Option</span>
+            <strong id="purchase-role-label">Select Subscriber or Provider</strong>
+          </div>
+          <div class="order-summary-row">
+            <span>Billing Method</span>
+            <strong id="purchase-payment-method">Choose payment method</strong>
+          </div>
+          <div class="order-summary-row order-summary-total">
+            <span>Total Due Today</span>
+            <strong id="purchase-total">$10.99 USD</strong>
+          </div>
         </div>
+        <label class="full-span">
+          <span>How do you want to pay?</span>
+          <select class="field" name="paymentMethodIntent" required>
+            <option value="">Select a payment method</option>
+            <option value="paypal">PayPal account</option>
+            <option value="debit_card">Debit card in PayPal secure checkout</option>
+            <option value="credit_card">Credit card in PayPal secure checkout</option>
+            <option value="venmo">Venmo in PayPal secure checkout</option>
+            <option value="apple_pay">Apple Pay in PayPal secure checkout</option>
+            <option value="google_pay">Google Pay in PayPal secure checkout</option>
+          </select>
+          <small class="field-hint">Choose how you plan to pay before clicking the secure checkout button.</small>
+        </label>
+        <div class="payment-method-note">
+          Select your payment method, accept the charge, then use the secure checkout buttons below. The PayPal checkout window is where you enter PayPal account, debit card, credit card, Venmo, Apple Pay, or Google Pay information. AW Roadside does not collect or store raw card numbers on this form.
+        </div>
+        <label class="toggle full-span"><input type="checkbox" name="paymentConsentAccepted" required/><span>I authorize AW Roadside to charge $10.99 USD through PayPal for this pre-signup access purchase.</span></label>
+        <div id="paypal-payment-status" class="muted" style="margin-top: 8px;">Loading secure checkout options…</div>
+        <div id="paypal-button-container" style="margin-top: 12px;"></div>
       </div>
 
       <div class="full-span" style="border-top: 1px solid #333; margin-top: 10px; padding-top: 10px;">
@@ -269,12 +351,8 @@
 <script>
   const PRODUCTION_BACKEND = 'https://awroadside-fire-backend.onrender.com';
   const TEMP_GENERIC_PASSWORD = 'Roadside2026!';
-  const PAYPAL_SUBSCRIPTION_CLIENT_ID = 'ATlQjOYY5zVxVfLvtgcsiRzjABeDVtoLN5b8ZoYJCUxqChzP4Y5frmu2bTW8KgSxw4wcFOdNoTtW4o2s';
-  const PAYPAL_SUBSCRIPTION_PLANS = {
-    SUBSCRIBER: 'P-24R12418JB726551MNI3SOVA',
-    PROVIDER: 'P-5MA53832KU627993ENI3STPA'
-  };
-  const SUBSCRIBER_PRE_SIGNUP_CHARGE = '10.99';
+  const PRE_SIGNUP_PRICE = '10.99';
+  const PRE_SIGNUP_CURRENCY = 'USD';
 
   const paypalState = {
     configured: false,
@@ -284,31 +362,128 @@
     captureId: '',
     captured: false,
     status: '',
-    approved: false,
-    planId: '',
-    role: 'SUBSCRIBER'
+    approved: false
   };
 
   function selectRole(role) {
+    const previousRole = document.getElementById('input-role').value;
     document.getElementById('input-role').value = role;
-    document.getElementById('role-subscriber').classList.toggle('active', role === 'SUBSCRIBER');
-    document.getElementById('role-provider').classList.toggle('active', role === 'PROVIDER');
-    document.getElementById('role-subscriber').setAttribute('aria-pressed', String(role === 'SUBSCRIBER'));
-    document.getElementById('role-provider').setAttribute('aria-pressed', String(role === 'PROVIDER'));
+    const subscriberButton = document.getElementById('role-subscriber');
+    const providerButton = document.getElementById('role-provider');
+    subscriberButton.classList.toggle('active', role === 'SUBSCRIBER');
+    providerButton.classList.toggle('active', role === 'PROVIDER');
+    subscriberButton.setAttribute('aria-pressed', role === 'SUBSCRIBER' ? 'true' : 'false');
+    providerButton.setAttribute('aria-pressed', role === 'PROVIDER' ? 'true' : 'false');
+    subscriberButton.querySelector('.role-choice-action').innerText = role === 'SUBSCRIBER' ? 'Subscriber Selected' : 'Choose Subscriber';
+    providerButton.querySelector('.role-choice-action').innerText = role === 'PROVIDER' ? 'Provider Selected' : 'Choose Provider';
+    document.querySelector('.role-selector').classList.remove('field-error');
     document.getElementById('form-title').innerText = role === 'SUBSCRIBER' ? 'Subscriber Information' : 'Provider Information';
     document.getElementById('provider-fields').classList.toggle('hidden', role === 'SUBSCRIBER');
-    paypalState.approved = false;
-    paypalState.subscriptionId = '';
-    paypalState.orderId = '';
-    paypalState.captureId = '';
-    paypalState.status = '';
-    paypalState.planId = PAYPAL_SUBSCRIPTION_PLANS[role] || PAYPAL_SUBSCRIPTION_PLANS.SUBSCRIBER;
-    paypalState.role = role;
+    updatePurchaseSummary(role);
+    if (previousRole && previousRole !== role) {
+      paypalState.orderId = '';
+      paypalState.subscriptionId = '';
+      paypalState.captureId = '';
+      paypalState.captured = false;
+      paypalState.status = '';
+      paypalState.approved = false;
+      setPaypalStatus('Role changed. Complete PayPal approval again for the selected signup option.');
+    }
     setGuideMessage(role === 'SUBSCRIBER'
       ? 'Pilot tip: Subscriber selected. Complete PayPal approval, then submit.'
       : 'Pilot tip: Provider selected. Complete PayPal approval, then submit.');
-    updateSelectedPlanText(role);
-    renderPaypalSubscriptionButton();
+  }
+
+  function getSelectedRole() {
+    return document.getElementById('input-role').value;
+  }
+
+  function getRoleLabel(role = getSelectedRole()) {
+    if (role === 'PROVIDER') return 'Provider';
+    if (role === 'SUBSCRIBER') return 'Subscriber';
+    return 'Select Subscriber or Provider';
+  }
+
+  function getSelectedPaymentMethod() {
+    return document.querySelector('[name="paymentMethodIntent"]')?.value || '';
+  }
+
+  function getPaymentMethodLabel(method = getSelectedPaymentMethod()) {
+    const labels = {
+      paypal: 'PayPal account',
+      debit_card: 'Debit card in PayPal secure checkout',
+      credit_card: 'Credit card in PayPal secure checkout',
+      venmo: 'Venmo in PayPal secure checkout',
+      apple_pay: 'Apple Pay in PayPal secure checkout',
+      google_pay: 'Google Pay in PayPal secure checkout'
+    };
+    return labels[method] || 'Choose payment method';
+  }
+
+  function getPurchaseDetails(role = getSelectedRole()) {
+    const roleLabel = getRoleLabel(role);
+    const paymentMethodIntent = getSelectedPaymentMethod();
+    return {
+      itemName: 'AW Roadside Pre-Signup Access',
+      description: role === 'PROVIDER'
+        ? 'AW Roadside provider pre-signup access and logistics screening.'
+        : 'AW Roadside subscriber pre-signup access and logistics screening.',
+      role,
+      roleLabel,
+      amount: PRE_SIGNUP_PRICE,
+      currency: PRE_SIGNUP_CURRENCY,
+      totalLabel: `$${PRE_SIGNUP_PRICE} ${PRE_SIGNUP_CURRENCY}`,
+      billingMethod: getPaymentMethodLabel(paymentMethodIntent),
+      paymentMethodIntent
+    };
+  }
+
+  function updatePurchaseSummary(role = getSelectedRole()) {
+    const purchase = getPurchaseDetails(role);
+    const roleLabel = document.getElementById('purchase-role-label');
+    const total = document.getElementById('purchase-total');
+    const itemName = document.getElementById('purchase-item-name');
+    const paymentMethod = document.getElementById('purchase-payment-method');
+    if (roleLabel) roleLabel.innerText = purchase.roleLabel;
+    if (total) total.innerText = purchase.totalLabel;
+    if (itemName) itemName.innerText = purchase.itemName;
+    if (paymentMethod) paymentMethod.innerText = purchase.billingMethod;
+  }
+
+  function validateRoleSelection() {
+    const role = getSelectedRole();
+    const roleSelector = document.querySelector('.role-selector');
+    const isValid = role === 'SUBSCRIBER' || role === 'PROVIDER';
+    if (roleSelector) roleSelector.classList.toggle('field-error', !isValid);
+    if (!isValid) {
+      setGuideMessage('Choose Subscriber or Provider before continuing.');
+      setPaypalStatus('Select a signup option before PayPal approval.');
+    }
+    return isValid;
+  }
+
+  function validatePaymentConsent() {
+    const consent = document.querySelector('[name="paymentConsentAccepted"]');
+    const accepted = Boolean(consent?.checked);
+    const label = consent?.closest('label');
+    if (label) label.classList.toggle('field-error', !accepted);
+    if (!accepted) {
+      setGuideMessage('Review the $10.99 USD purchase details and authorize the PayPal charge before continuing.');
+      setPaypalStatus('Payment authorization is required before PayPal approval.');
+    }
+    return accepted;
+  }
+
+  function validatePaymentMethod() {
+    const paymentMethod = document.querySelector('[name="paymentMethodIntent"]');
+    const selected = Boolean(paymentMethod?.value);
+    const label = paymentMethod?.closest('label');
+    if (label) label.classList.toggle('field-error', !selected);
+    if (!selected) {
+      setGuideMessage('Choose how you want to pay before opening secure checkout.');
+      setPaypalStatus('Select PayPal, debit card, credit card, Venmo, Apple Pay, or Google Pay before approval.');
+    }
+    return selected;
   }
 
   function setGuideMessage(message) {
@@ -319,6 +494,21 @@
   function setPaypalStatus(message) {
     const paypalStatus = document.getElementById('paypal-payment-status');
     if (paypalStatus) paypalStatus.innerText = message;
+  }
+
+  function describeEmailConfirmation(emailConfirmation, fallbackEmail) {
+    const status = String(emailConfirmation?.deliveryStatus || '').toLowerCase();
+    const message = String(emailConfirmation?.message || '').trim();
+    if (status === 'sent') {
+      return `Confirmation email sent to ${fallbackEmail || 'your email address'}.`;
+    }
+    if (status === 'failed') {
+      return message || 'Your intake was saved, but the confirmation email could not be sent. Please contact AW Roadside support.';
+    }
+    if (status === 'stored-no-transport') {
+      return 'Your intake was saved. Email delivery is pending server mail transport verification.';
+    }
+    return `Your intake was saved. Check ${fallbackEmail || 'your email'} for the confirmation message.`;
   }
 
   function getBackendBaseUrl() {
@@ -351,7 +541,7 @@
     throw lastError || new Error('Request failed');
   }
 
-  async function ensurePaypalSdk(clientId) {
+  async function ensurePaypalSdk(clientId, currency = 'USD') {
     if (window.paypal && window.paypal.Buttons) return;
     await new Promise((resolve, reject) => {
       const existing = document.querySelector('script[data-paypal-sdk="true"]');
@@ -361,7 +551,7 @@
         return;
       }
       const script = document.createElement('script');
-      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&vault=true&intent=subscription`;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&intent=capture&vault=true&enable-funding=venmo,paylater,card`;
       script.async = true;
       script.dataset.paypalSdk = 'true';
       script.onload = () => resolve();
@@ -370,92 +560,15 @@
     });
   }
 
-  function updateSelectedPlanText(role) {
-    const planTitle = document.getElementById('paypal-plan-title');
-    const planDescription = document.getElementById('paypal-plan-description');
-    if (planTitle) planTitle.innerText = role === 'PROVIDER' ? 'Provider Plan' : 'Subscriber Plan';
-    if (planDescription) {
-      planDescription.innerText = role === 'PROVIDER'
-        ? 'Use this approval for roadside provider onboarding.'
-        : 'Use this approval for customer roadside membership.';
-    }
-  }
-
-  function renderPaypalSubscriptionButton() {
-    const container = document.getElementById('paypal-button-container');
-    if (!container || !window.paypal || !window.paypal.Buttons) return;
-
-    const role = document.getElementById('input-role').value || 'SUBSCRIBER';
-    const planId = PAYPAL_SUBSCRIPTION_PLANS[role] || PAYPAL_SUBSCRIPTION_PLANS.SUBSCRIBER;
-    updateSelectedPlanText(role);
-    container.innerHTML = '';
-    paypalState.planId = planId;
-    paypalState.role = role;
-    setPaypalStatus(`${role === 'PROVIDER' ? 'Provider' : 'Subscriber'} PayPal subscription approval is required before submit.`);
-
-    window.paypal.Buttons({
-      style: {
-        shape: 'rect',
-        color: 'gold',
-        layout: 'vertical',
-        label: 'subscribe'
-      },
-      createSubscription(data, actions) {
-        return actions.subscription.create({
-          plan_id: planId
-        });
-      },
-      onApprove(data) {
-        const subscriptionId = data.subscriptionID || '';
-        if (!subscriptionId) {
-          throw new Error('No PayPal subscription ID returned.');
-        }
-        document.getElementById('input-role').value = role;
-        document.getElementById('role-subscriber').classList.toggle('active', role === 'SUBSCRIBER');
-        document.getElementById('role-provider').classList.toggle('active', role === 'PROVIDER');
-        document.getElementById('role-subscriber').setAttribute('aria-pressed', String(role === 'SUBSCRIBER'));
-        document.getElementById('role-provider').setAttribute('aria-pressed', String(role === 'PROVIDER'));
-        document.getElementById('form-title').innerText = role === 'SUBSCRIBER' ? 'Subscriber Information' : 'Provider Information';
-        document.getElementById('provider-fields').classList.toggle('hidden', role === 'SUBSCRIBER');
-        paypalState.subscriptionId = subscriptionId;
-        paypalState.orderId = '';
-        paypalState.captureId = '';
-        paypalState.status = 'APPROVED';
-        paypalState.approved = true;
-        paypalState.captured = false;
-        paypalState.planId = planId;
-        paypalState.role = role;
-        setPaypalStatus(`PayPal subscription approved: ${subscriptionId}`);
-        setGuideMessage('PayPal subscription approved. Submit the form to complete your pending profile setup.');
-      },
-      onCancel() {
-        paypalState.approved = false;
-        setPaypalStatus('PayPal subscription approval canceled.');
-        setGuideMessage('Approval was canceled. Approve PayPal to continue.');
-      },
-      onError(error) {
-        paypalState.approved = false;
-        setPaypalStatus(`PayPal failed: ${error?.message || 'Unknown error'}`);
-        setGuideMessage('PayPal hit an error. Please retry the subscription button.');
-      }
-    }).render('#paypal-button-container');
-  }
-
   async function initializePaypalForPreSignup() {
     const backendBase = getBackendBaseUrl();
     try {
-      let paymentConfig = {};
-      try {
-        paymentConfig = await fetchJsonWithFallback([
+      const paymentConfig = await fetchJsonWithFallback([
         `${backendBase}/api/payments/config`,
         `${backendBase}/index.mjs/payments/config`
-        ]);
-      } catch {
-        paymentConfig = {};
-      }
+      ]);
 
-      const clientId = paymentConfig?.clientId || PAYPAL_SUBSCRIPTION_CLIENT_ID;
-      paypalState.configured = Boolean(clientId);
+      paypalState.configured = Boolean(paymentConfig?.enabled && paymentConfig?.clientId);
       paypalState.enabled = paypalState.configured;
 
       if (!paypalState.configured) {
@@ -464,13 +577,88 @@
         return;
       }
 
-      await ensurePaypalSdk(clientId);
+      await ensurePaypalSdk(paymentConfig.clientId, paymentConfig.currency || 'USD');
       if (!window.paypal || !window.paypal.Buttons) {
         setPaypalStatus('PayPal SDK failed to initialize.');
         return;
       }
 
-      renderPaypalSubscriptionButton();
+      setPaypalStatus('Select signup and payment options, then click a secure checkout button below.');
+      window.paypal.Buttons({
+        style: { shape: 'pill', layout: 'vertical', label: 'pay' },
+        onClick(data, actions) {
+          if (!validateRoleSelection() || !validatePaymentMethod() || !validatePaymentConsent()) {
+            return actions.reject();
+          }
+          setPaypalStatus('Opening PayPal secure checkout. Enter your selected payment information in the checkout window.');
+          return actions.resolve();
+        },
+        async createOrder() {
+          if (!validateRoleSelection()) {
+            throw new Error('Choose Subscriber or Provider before PayPal approval.');
+          }
+          if (!validatePaymentMethod()) {
+            throw new Error('Choose a payment method before PayPal approval.');
+          }
+          if (!validatePaymentConsent()) {
+            throw new Error('Authorize the $10.99 USD PayPal charge before continuing.');
+          }
+          const role = getSelectedRole();
+          const fullName = document.querySelector('[name="fullName"]').value || '';
+          const phoneNumber = document.querySelector('[name="phoneNumber"]').value || '';
+          const zip = document.querySelector('[name="zip"]').value || '';
+          const purchase = getPurchaseDetails(role);
+          const order = await fetchJsonWithFallback([
+            `${backendBase}/api/payments/create-order`
+          ], {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              paymentKind: 'pre-signup',
+              role,
+              fullName,
+              phoneNumber,
+              zip,
+              amount: purchase.amount,
+              currency: purchase.currency,
+              purchase,
+              paymentMethodIntent: purchase.paymentMethodIntent,
+              brand_name: 'AW Roadside',
+              description: purchase.description,
+              application_context: {
+                brand_name: 'AW Roadside',
+                shipping_preference: 'NO_SHIPPING',
+                user_action: 'PAY_NOW'
+              }
+            })
+          });
+          if (!order?.orderId) throw new Error('Unable to create PayPal order.');
+          paypalState.orderId = order.orderId;
+          paypalState.status = order.status || 'CREATED';
+          return order.orderId;
+        },
+        async onApprove(data) {
+          const id = data.orderID || data.subscriptionID || '';
+          if (!id) throw new Error('No PayPal approval ID returned.');
+          paypalState.orderId = id;
+          paypalState.captureId = data.orderID || data.subscriptionID || '';
+          paypalState.status = 'APPROVED';
+          paypalState.approved = true;
+          paypalState.captured = false;
+          setPaypalStatus('PayPal approved. You can now submit pre-signup.');
+          setGuideMessage('PayPal approved. Submit the form to complete your pending profile setup.');
+        },
+        onCancel() {
+          paypalState.approved = false;
+          setPaypalStatus('PayPal approval canceled.');
+          setGuideMessage('Approval was canceled. Approve PayPal to continue.');
+        },
+        onError(error) {
+          paypalState.approved = false;
+          setPaypalStatus(`PayPal failed: ${error?.message || 'Unknown error'}`);
+          setGuideMessage('PayPal hit an error. Please retry the payment button.');
+        }
+      }).render('#paypal-button-container');
     } catch (error) {
       setPaypalStatus(`Unable to initialize PayPal: ${error.message}`);
       setGuideMessage('Could not initialize PayPal. Please refresh and try again.');
@@ -505,14 +693,34 @@
   document.getElementById('pre-signup-form').querySelector('[name="earlyTestingConsent"]').addEventListener('change', function(e) {
     document.getElementById('testing-email-container').classList.toggle('hidden', e.target.value !== 'yes');
   });
+  document.getElementById('pre-signup-form').querySelector('[name="paymentMethodIntent"]').addEventListener('change', function() {
+    updatePurchaseSummary();
+    paypalState.orderId = '';
+    paypalState.subscriptionId = '';
+    paypalState.captureId = '';
+    paypalState.captured = false;
+    paypalState.status = '';
+    paypalState.approved = false;
+    setPaypalStatus('Payment method updated. Click a secure checkout button below to enter payment information.');
+  });
 
-  const initialRole = new URLSearchParams(window.location.search).get('role');
-  selectRole(String(initialRole || 'SUBSCRIBER').toUpperCase() === 'PROVIDER' ? 'PROVIDER' : 'SUBSCRIBER');
   initializePaypalForPreSignup();
 
   const form = document.getElementById('pre-signup-form');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    if (!validateRoleSelection()) {
+      return;
+    }
+
+    if (!validatePaymentMethod()) {
+      return;
+    }
+
+    if (!validatePaymentConsent()) {
+      return;
+    }
 
     if (!paypalState.approved) {
       setPaypalStatus('PayPal approval is required before submit.');
@@ -532,8 +740,7 @@
 
     const formData = new FormData(form);
     const role = formData.get('role');
-    const isSubscriber = role === 'SUBSCRIBER';
-    const subscriberAmount = isSubscriber ? SUBSCRIBER_PRE_SIGNUP_CHARGE : '';
+    const purchase = getPurchaseDetails(role);
     const data = {
       role,
       fullName: formData.get('fullName'),
@@ -550,29 +757,30 @@
         color: formData.get('vehicleColor')
       },
       orderId: paypalState.orderId || '',
-      subscriptionId: paypalState.subscriptionId || '',
-      paypalSubscriptionId: paypalState.subscriptionId || '',
-      paypalPlanId: paypalState.planId || '',
-      capturePaypal: false,
+      capturePaypal: true,
       captureStatus: paypalState.status || 'APPROVED',
       captureId: paypalState.captureId || null,
-      subscriptionOnly: role === 'PROVIDER',
-      paymentKind: role === 'PROVIDER' ? 'provider-webhook-subscription' : 'subscriber-pre-signup-charge',
-      paypal: {
-        subscriptionId: paypalState.subscriptionId || '',
-        planId: paypalState.planId || '',
-        status: paypalState.status || 'APPROVED'
-      },
+      amount: purchase.amount,
+      currency: purchase.currency,
+      purchase,
       payment: {
-        subscriptionId: paypalState.subscriptionId || '',
-        planId: paypalState.planId || '',
+        provider: 'paypal',
+        paymentKind: 'pre-signup',
+        methodIntent: purchase.paymentMethodIntent,
+        methodLabel: purchase.billingMethod,
+        orderId: paypalState.orderId || '',
+        captureId: paypalState.captureId || null,
         status: paypalState.status || 'APPROVED',
-        type: role === 'PROVIDER' ? 'provider-subscription' : 'subscriber-charge',
-        amount: subscriberAmount || undefined,
-        currency: isSubscriber ? 'USD' : undefined
+        amount: {
+          currency: purchase.currency,
+          value: purchase.amount
+        },
+        consentAccepted: formData.get('paymentConsentAccepted') === 'on',
+        consentText: `I authorize AW Roadside to charge ${purchase.totalLabel} through PayPal for this pre-signup access purchase.`
       },
-      amount: subscriberAmount || undefined,
-      currency: isSubscriber ? 'USD' : undefined,
+      paymentMethodIntent: purchase.paymentMethodIntent,
+      paymentMethodLabel: purchase.billingMethod,
+      paymentConsentAccepted: formData.get('paymentConsentAccepted') === 'on',
       termsAccepted: formData.get('termsAccepted') === 'on',
       storeEmail: formData.get('storeEmail'),
       earlyTestingConsent: formData.get('earlyTestingConsent') === 'yes',
@@ -602,12 +810,13 @@
       });
 
       feedback.className = 'feedback-box success';
-      feedback.innerText = 'Success! Your pending profile was created. Check email for temporary password.';
+      feedback.innerText = describeEmailConfirmation(response.emailConfirmation, data.email);
 
       document.getElementById('pre-signup-form').classList.add('hidden');
       document.querySelector('.role-selector').classList.add('hidden');
       document.querySelector('.screening-info').classList.add('hidden');
       document.getElementById('display-intake-id').innerText = response.intakeId || 'INTAKE-PENDING';
+      document.getElementById('display-email-status').innerText = describeEmailConfirmation(response.emailConfirmation, data.email);
       const confirmationView = document.getElementById('confirmation-view');
       confirmationView.hidden = false;
       confirmationView.classList.remove('hidden');
