@@ -90,6 +90,44 @@
   .guide-message { color: #fff; font-size: 0.95rem; line-height: 1.45; }
   .guide-message strong { color: var(--yellow); }
 
+  .website-testing-note {
+    margin: 14px 0 16px;
+    padding: 14px 16px;
+    border: 1px solid rgba(255, 204, 0, 0.35);
+    border-radius: 12px;
+    background: rgba(17,17,17,.86);
+    color: #fff;
+  }
+  .website-testing-note h2 {
+    margin: 0 0 8px;
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--yellow);
+    font-size: 1.35rem;
+    line-height: 1.1;
+  }
+  .website-testing-note p {
+    margin: 0 0 8px;
+    color: #ddd;
+    font-size: .92rem;
+    line-height: 1.45;
+  }
+  .website-testing-note a {
+    color: #111;
+    background: var(--yellow);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border-radius: 999px;
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow: 0 0 18px rgba(255,204,0,.2);
+  }
+  .website-testing-note .testing-incentive {
+    color: #fff;
+    font-weight: 700;
+  }
+
   .field-hint {
     display: none;
     margin-top: 6px;
@@ -223,6 +261,13 @@
     <div class="screening-info">
       <p><strong>Logistics Screening:</strong> Complete PayPal approval first, then submit your pre-signup. Your account/profile is created in pending status and finalized when the app launches.</p>
     </div>
+
+    <section class="website-testing-note" aria-label="AW Roadside prototype testing">
+      <h2>Check Out The Website</h2>
+      <p>--&gt; <a href="https://awroadside-fire-frontend.onrender.com" target="_blank" rel="noopener noreferrer">AWROADSIDE</a> &lt;--</p>
+      <p>AW Roadside is a functional prototype that will be used for live workflow testing before public launch.</p>
+      <p class="testing-incentive">Testing incentives: 10 providers and 10 subscribers can receive a free one-year membership. Subscribers who elect to participate in testing can receive 5 free services.</p>
+    </section>
 
     <div class="guide-box" id="guide-box" aria-live="polite">
       <div class="guide-avatar" aria-hidden="true"></div>
