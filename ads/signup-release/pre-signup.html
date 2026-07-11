@@ -398,6 +398,11 @@
   const TEMP_GENERIC_PASSWORD = 'Roadside2026!';
   const PRE_SIGNUP_PRICE = '10.99';
   const PRE_SIGNUP_CURRENCY = 'USD';
+  const PAYPAL_SUBSCRIPTION_CLIENT_ID = 'ATlQjOYY5zVxVfLvtgcsiRzjABeDVtoLN5b8ZoYJCUxqChzP4Y5frmu2bTW8KgSxw4wcFOdNoTtW4o2s';
+  const PAYPAL_SUBSCRIPTION_PLANS = {
+    SUBSCRIBER: 'P-24R12418JB726551MNI3SOVA',
+    PROVIDER: 'P-5MA53832KU627993ENI3STPA'
+  };
 
   const paypalState = {
     configured: false,
@@ -407,7 +412,9 @@
     captureId: '',
     captured: false,
     status: '',
-    approved: false
+    approved: false,
+    planId: '',
+    role: ''
   };
 
   function selectRole(role) {
@@ -425,6 +432,8 @@
     document.getElementById('form-title').innerText = role === 'SUBSCRIBER' ? 'Subscriber Information' : 'Provider Information';
     document.getElementById('provider-fields').classList.toggle('hidden', role === 'SUBSCRIBER');
     updatePurchaseSummary(role);
+    paypalState.planId = PAYPAL_SUBSCRIPTION_PLANS[role] || PAYPAL_SUBSCRIPTION_PLANS.SUBSCRIBER;
+    paypalState.role = role;
     if (previousRole && previousRole !== role) {
       paypalState.orderId = '';
       paypalState.subscriptionId = '';
@@ -437,6 +446,11 @@
     setGuideMessage(role === 'SUBSCRIBER'
       ? 'Pilot tip: Subscriber selected. Complete PayPal approval, then submit.'
       : 'Pilot tip: Provider selected. Complete PayPal approval, then submit.');
+    if (window.paypal?.Buttons) {
+      initializePaypalForPreSignup().catch(error => {
+        setPaypalStatus(`Unable to refresh PayPal button: ${error.message}`);
+      });
+    }
   }
 
   function getSelectedRole() {
@@ -596,7 +610,7 @@
         return;
       }
       const script = document.createElement('script');
-      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&intent=capture&vault=true&enable-funding=venmo,paylater,card`;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&vault=true&intent=subscription&enable-funding=venmo,paylater,card`;
       script.async = true;
       script.dataset.paypalSdk = 'true';
       script.onload = () => resolve();
@@ -628,17 +642,26 @@
         return;
       }
 
-      setPaypalStatus('Select signup and payment options, then click a secure checkout button below.');
+      setPaypalStatus('Select signup and payment options, then click a secure subscription button below.');
+      const selectedRole = getSelectedRole() || 'SUBSCRIBER';
+      const planId = PAYPAL_SUBSCRIPTION_PLANS[selectedRole] || PAYPAL_SUBSCRIPTION_PLANS.SUBSCRIBER;
+      const container = document.getElementById('paypal-button-container');
+      const planContainerId = `paypal-button-container-${planId}`;
+      if (container) {
+        container.innerHTML = `<div id="${planContainerId}"></div>`;
+      }
+      paypalState.planId = planId;
+      paypalState.role = selectedRole;
       window.paypal.Buttons({
-        style: { shape: 'pill', layout: 'vertical', label: 'pay' },
+        style: { shape: 'rect', color: 'gold', layout: 'vertical', label: 'subscribe' },
         onClick(data, actions) {
           if (!validateRoleSelection() || !validatePaymentMethod() || !validatePaymentConsent()) {
             return actions.reject();
           }
-          setPaypalStatus('Opening PayPal secure checkout. Enter your selected payment information in the checkout window.');
+          setPaypalStatus('Opening PayPal secure subscription checkout. Enter your selected payment information in the checkout window.');
           return actions.resolve();
         },
-        async createOrder() {
+        createSubscription(data, actions) {
           if (!validateRoleSelection()) {
             throw new Error('Choose Subscriber or Provider before PayPal approval.');
           }
@@ -649,61 +672,36 @@
             throw new Error('Authorize the $10.99 USD PayPal charge before continuing.');
           }
           const role = getSelectedRole();
-          const fullName = document.querySelector('[name="fullName"]').value || '';
-          const phoneNumber = document.querySelector('[name="phoneNumber"]').value || '';
-          const zip = document.querySelector('[name="zip"]').value || '';
-          const purchase = getPurchaseDetails(role);
-          const order = await fetchJsonWithFallback([
-            `${backendBase}/api/payments/create-order`
-          ], {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              paymentKind: 'pre-signup',
-              role,
-              fullName,
-              phoneNumber,
-              zip,
-              amount: purchase.amount,
-              currency: purchase.currency,
-              purchase,
-              paymentMethodIntent: purchase.paymentMethodIntent,
-              brand_name: 'AW Roadside',
-              description: purchase.description,
-              application_context: {
-                brand_name: 'AW Roadside',
-                shipping_preference: 'NO_SHIPPING',
-                user_action: 'PAY_NOW'
-              }
-            })
+          const activePlanId = PAYPAL_SUBSCRIPTION_PLANS[role] || PAYPAL_SUBSCRIPTION_PLANS.SUBSCRIBER;
+          paypalState.planId = activePlanId;
+          paypalState.role = role;
+          return actions.subscription.create({
+            plan_id: activePlanId
           });
-          if (!order?.orderId) throw new Error('Unable to create PayPal order.');
-          paypalState.orderId = order.orderId;
-          paypalState.status = order.status || 'CREATED';
-          return order.orderId;
         },
         async onApprove(data) {
-          const id = data.orderID || data.subscriptionID || '';
+          const id = data.subscriptionID || '';
           if (!id) throw new Error('No PayPal approval ID returned.');
-          paypalState.orderId = id;
-          paypalState.captureId = data.orderID || data.subscriptionID || '';
+          paypalState.orderId = '';
+          paypalState.subscriptionId = id;
+          paypalState.captureId = id;
           paypalState.status = 'APPROVED';
           paypalState.approved = true;
           paypalState.captured = false;
-          setPaypalStatus('PayPal approved. You can now submit pre-signup.');
-          setGuideMessage('PayPal approved. Submit the form to complete your pending profile setup.');
+          setPaypalStatus(`PayPal subscription approved: ${id}. You can now submit pre-signup.`);
+          setGuideMessage('PayPal subscription approved. Submit the form to complete your pending profile setup.');
         },
         onCancel() {
           paypalState.approved = false;
-          setPaypalStatus('PayPal approval canceled.');
+          setPaypalStatus('PayPal subscription approval canceled.');
           setGuideMessage('Approval was canceled. Approve PayPal to continue.');
         },
         onError(error) {
           paypalState.approved = false;
           setPaypalStatus(`PayPal failed: ${error?.message || 'Unknown error'}`);
-          setGuideMessage('PayPal hit an error. Please retry the payment button.');
+          setGuideMessage('PayPal hit an error. Please retry the subscription button.');
         }
-      }).render('#paypal-button-container');
+      }).render(`#${planContainerId}`);
     } catch (error) {
       setPaypalStatus(`Unable to initialize PayPal: ${error.message}`);
       setGuideMessage('Could not initialize PayPal. Please refresh and try again.');
@@ -717,7 +715,6 @@
     const required = form.querySelectorAll('input[required], select[required]');
     for (const input of required) {
       const type = input.type;
-      let invalid = false;
       if (type === 'checkbox') invalid = !input.checked;
       else invalid = !String(input.value || '').trim();
       if (invalid) {
@@ -802,18 +799,30 @@
         color: formData.get('vehicleColor')
       },
       orderId: paypalState.orderId || '',
-      capturePaypal: true,
+      subscriptionId: paypalState.subscriptionId || '',
+      paypalSubscriptionId: paypalState.subscriptionId || '',
+      paypalPlanId: paypalState.planId || '',
+      capturePaypal: false,
       captureStatus: paypalState.status || 'APPROVED',
       captureId: paypalState.captureId || null,
+      subscriptionOnly: true,
+      paymentKind: role === 'PROVIDER' ? 'provider-webhook-subscription' : 'subscriber-webhook-subscription',
+      paypal: {
+        subscriptionId: paypalState.subscriptionId || '',
+        planId: paypalState.planId || '',
+        status: paypalState.status || 'APPROVED'
+      },
       amount: purchase.amount,
       currency: purchase.currency,
       purchase,
       payment: {
         provider: 'paypal',
-        paymentKind: 'pre-signup',
+        paymentKind: role === 'PROVIDER' ? 'provider-subscription' : 'subscriber-subscription',
         methodIntent: purchase.paymentMethodIntent,
         methodLabel: purchase.billingMethod,
         orderId: paypalState.orderId || '',
+        subscriptionId: paypalState.subscriptionId || '',
+        planId: paypalState.planId || '',
         captureId: paypalState.captureId || null,
         status: paypalState.status || 'APPROVED',
         amount: {
