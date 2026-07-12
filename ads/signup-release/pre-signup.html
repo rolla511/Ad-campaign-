@@ -619,7 +619,7 @@
       captureStatus: paypalState.status || 'APPROVED',
       captureId: paypalState.captureId || null,
       subscriptionOnly: role === 'PROVIDER',
-      paymentKind: role === 'PROVIDER' ? 'provider-webhook-subscription' : 'subscriber-pre-signup-charge',
+      paymentKind: role === 'PROVIDER' ? 'provider-webhook-subscription' : 'subscriber-webhook-subscription',
       paypal: {
         subscriptionId: paypalState.subscriptionId || '',
         planId: paypalState.planId || '',
@@ -629,7 +629,7 @@
         subscriptionId: paypalState.subscriptionId || '',
         planId: paypalState.planId || '',
         status: paypalState.status || 'APPROVED',
-        type: role === 'PROVIDER' ? 'provider-subscription' : 'subscriber-charge',
+        type: role === 'PROVIDER' ? 'provider-subscription' : 'subscriber-subscription',
         amount: subscriberAmount || undefined,
         currency: isSubscriber ? 'USD' : undefined
       },
