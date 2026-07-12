@@ -463,8 +463,10 @@
         label: 'subscribe'
       },
       createSubscription(data, actions) {
+        const customId = `pre-signup-${role}-${Date.now()}`;
         return actions.subscription.create({
-          plan_id: planId
+          plan_id: planId,
+          custom_id: customId
         });
       },
       onApprove(data) {
