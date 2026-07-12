@@ -517,6 +517,9 @@
       }
 
       const clientId = paymentConfig?.clientId || PAYPAL_SUBSCRIPTION_CLIENT_ID;
+      if (paymentConfig?.subscriberPlanId) PAYPAL_SUBSCRIPTION_PLANS.SUBSCRIBER = paymentConfig.subscriberPlanId;
+      if (paymentConfig?.providerPlanId) PAYPAL_SUBSCRIPTION_PLANS.PROVIDER = paymentConfig.providerPlanId;
+
       paypalState.configured = Boolean(clientId);
       paypalState.enabled = paypalState.configured;
 
