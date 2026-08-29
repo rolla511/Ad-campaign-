@@ -364,6 +364,12 @@
   const form = document.getElementById('pre-signup-form');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    if (paypalState.status !== 'APPROVED') {
+      setPaypalStatus('PayPal approval is required before submit.');
+      return;
+    }
+
     const feedback = document.getElementById('feedback');
     const submitBtn = e.target.querySelector('button[type="submit"]');
     
