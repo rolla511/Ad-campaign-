@@ -149,6 +149,18 @@ let videoRotationLocked = false;
 const $ = (selector) => document.querySelector(selector);
 const money = (value) => `$${Number(value || 0).toFixed(2)}`;
 const localRuntimeRecordKey = "arhc.robbie-rolla.runtime-record";
+const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;"
+}[character]));
+const safeUrl = (value) => /^(?:https?:|\/(?!\/)|\.{1,2}\/)/i.test(String(value || "")) ? String(value) : "";
+const safeGradient = (value, fallback) => /^(?:linear|radial)-gradient\([#(),.%\s\w-]+\)$/i.test(String(value || ""))
+  ? String(value)
+  : fallback;
+const safeClass = (value) => /^[\w-]+$/.test(String(value || "")) ? String(value) : "";
 
 function readLocalRuntimeRecord() {
   try {
@@ -298,21 +310,26 @@ function trackPublicEvent({ action, targetType, targetId, targetTitle, targetUrl
 function renderTracks() {
   $("#track-grid").innerHTML = tracks.map((track) => {
     const unlocked = unlockedTracks.has(track.id);
+    const trackId = escapeHtml(track.id);
+    const title = escapeHtml(track.title);
+    const mood = escapeHtml(track.mood);
+    const streamUrl = escapeHtml(safeUrl(track.streamUrl || track.downloadUrl));
+    const listenUrl = escapeHtml(safeUrl(track.listenUrl));
     return `
-      <article class="track-card" data-track-id="${track.id}">
-        <div class="track-art" style="--art: ${track.art}"></div>
+      <article class="track-card" data-track-id="${trackId}">
+        <div class="track-art" style="--art: ${escapeHtml(safeGradient(track.art, "linear-gradient(135deg, #36c58f, #101718 50%, #e0ad4f)"))}"></div>
         <header>
           <div>
-            <strong>${track.title}</strong>
-            <small>${track.mood}</small>
+            <strong>${title}</strong>
+            <small>${mood}</small>
           </div>
           <span class="track-price">${track.price ? money(track.price) : "Free"}</span>
         </header>
         <p>Public stream access is open. Download purchase is ${money(track.price)} for this title only; each Robbie Rolla song is sold separately.</p>
-        <audio class="track-player" controls preload="metadata" src="${track.streamUrl || track.downloadUrl}" data-stream-track="${track.id}"></audio>
+        <audio class="track-player" controls preload="metadata" src="${streamUrl}" data-stream-track="${trackId}"></audio>
         <div class="track-actions">
-          ${track.listenUrl ? `<a class="listen-link" href="${track.listenUrl}" target="_blank" rel="noreferrer" data-track-link="${track.id}">Listen</a>` : ""}
-          <button type="button" data-action="${unlocked ? "download" : "pay"}" data-track-id="${track.id}">
+          ${listenUrl ? `<a class="listen-link" href="${listenUrl}" target="_blank" rel="noreferrer" data-track-link="${trackId}">Listen</a>` : ""}
+          <button type="button" data-action="${unlocked ? "download" : "pay"}" data-track-id="${trackId}">
             ${unlocked ? "Download Track" : `Purchase Download ${money(track.price)}`}
           </button>
         </div>
@@ -323,10 +340,10 @@ function renderTracks() {
 
 function renderPromoLinks() {
   $("#promo-grid").innerHTML = promoLinks.map((link) => `
-    <a class="promo-card ${link.tone}" href="${link.url}" target="_blank" rel="noreferrer" data-promo-link="${link.title}">
-      <span>${link.label}</span>
-      <strong>${link.title}</strong>
-      <small>${link.detail}</small>
+    <a class="promo-card ${safeClass(link.tone)}" href="${escapeHtml(safeUrl(link.url))}" target="_blank" rel="noreferrer" data-promo-link="${escapeHtml(link.title)}">
+      <span>${escapeHtml(link.label)}</span>
+      <strong>${escapeHtml(link.title)}</strong>
+      <small>${escapeHtml(link.detail)}</small>
     </a>
   `).join("");
 }
@@ -334,11 +351,11 @@ function renderPromoLinks() {
 function renderImages() {
   $("#image-grid").innerHTML = artistImages.map((image) => `
     <figure class="image-card">
-      <img src="${image.src}" alt="${image.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-      <div class="image-fallback" style="--fallback: ${image.fallback || "linear-gradient(135deg, #36c58f, #101718 50%, #e0ad4f)"}"></div>
+      <img src="${escapeHtml(safeUrl(image.src))}" alt="${escapeHtml(image.title)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+      <div class="image-fallback" style="--fallback: ${escapeHtml(safeGradient(image.fallback, "linear-gradient(135deg, #36c58f, #101718 50%, #e0ad4f)"))}"></div>
       <figcaption>
-        <strong>${image.title}</strong>
-        <small>${image.detail}</small>
+        <strong>${escapeHtml(image.title)}</strong>
+        <small>${escapeHtml(image.detail)}</small>
       </figcaption>
     </figure>
   `).join("");
@@ -355,23 +372,23 @@ function renderVideos() {
   $("#video-grid").innerHTML = `
     <article class="video-player-card">
       <div class="video-stage">
-        <video class="featured-video" controls preload="metadata" ${previewMode ? "autoplay muted playsinline" : ""} data-video-id="${activeVideo.id}" data-preview-mode="${previewMode}">
-          <source src="${activeVideo.src}" type="${activeVideo.type}" />
+        <video class="featured-video" controls preload="metadata" ${previewMode ? "autoplay muted playsinline" : ""} data-video-id="${escapeHtml(activeVideo.id)}" data-preview-mode="${previewMode}">
+          <source src="${escapeHtml(safeUrl(activeVideo.src))}" type="${escapeHtml(activeVideo.type)}" />
         </video>
         <div class="snippet-badge" id="snippet-badge">${previewMode ? "Preview rotation" : "Full video selected"}</div>
       </div>
       <div class="video-meta">
         <div>
-          <strong>${activeVideo.title}</strong>
-          <small>${activeVideo.detail}</small>
+          <strong>${escapeHtml(activeVideo.title)}</strong>
+          <small>${escapeHtml(activeVideo.detail)}</small>
         </div>
         <span>${artistVideos.length} videos</span>
       </div>
       <div class="video-menu" aria-label="Select full artist video">
         ${artistVideos.map((video) => `
-          <button type="button" class="video-choice ${video.id === activeVideo.id ? "active" : ""}" data-select-video="${video.id}" aria-pressed="${video.id === activeVideo.id}">
-            <span>${video.title}</span>
-            <small>${video.detail}</small>
+          <button type="button" class="video-choice ${video.id === activeVideo.id ? "active" : ""}" data-select-video="${escapeHtml(video.id)}" aria-pressed="${video.id === activeVideo.id}">
+            <span>${escapeHtml(video.title)}</span>
+            <small>${escapeHtml(video.detail)}</small>
           </button>
         `).join("")}
       </div>

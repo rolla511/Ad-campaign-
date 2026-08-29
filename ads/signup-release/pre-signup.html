@@ -673,6 +673,10 @@
           }
           const role = getSelectedRole();
           const activePlanId = PAYPAL_SUBSCRIPTION_PLANS[role] || PAYPAL_SUBSCRIPTION_PLANS.SUBSCRIBER;
+          if (!activePlanId) {
+            setPaypalStatus('PayPal subscription plans are unavailable. Please try again later.');
+            throw new Error('PayPal subscription plan is unavailable.');
+          }
           paypalState.planId = activePlanId;
           paypalState.role = role;
           const customId = `pre-signup-${role}-${Date.now()}`;
