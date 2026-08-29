@@ -176,6 +176,15 @@ let selectedTrackId = tracks[0]?.id || "";
 const $ = (selector) => document.querySelector(selector);
 const money = (value) => `$${Number(value || 0).toFixed(2)}`;
 const localRuntimeRecordKey = "arhc.robbie-rolla.runtime-record";
+const visibilityKey = "arhc.robbie-rolla.stat-visibility";
+let analyticsTotals = {};
+
+const defaultStatVisibility = {
+  "live:artist-camera": false,
+  "track:we-belong-part-1": true,
+  "track:we-belong-part-2-for-wishing": true,
+  "track:black-light": true
+};
 
 function readLocalRuntimeRecord() {
   try {
@@ -188,6 +197,27 @@ function readLocalRuntimeRecord() {
 function writeLocalRuntimeRecord(record) {
   localStorage.setItem(localRuntimeRecordKey, JSON.stringify(record));
   window.arhcRuntimeRecord = record;
+}
+
+function readStatVisibility() {
+  try {
+    return { ...defaultStatVisibility, ...(JSON.parse(localStorage.getItem(visibilityKey)) || {}) };
+  } catch {
+    return { ...defaultStatVisibility };
+  }
+}
+
+function writeStatVisibility(settings) {
+  localStorage.setItem(visibilityKey, JSON.stringify(settings));
+}
+
+function setStatVisibility(targetType, targetId, isPublic) {
+  const settings = readStatVisibility();
+  settings[`${targetType}:${targetId}`] = isPublic;
+  writeStatVisibility(settings);
+  renderTracks();
+  renderArtistDashboard();
+  updateLiveControls();
 }
 
 function recordLocalRuntimeEvent(payload) {
@@ -258,6 +288,22 @@ function selectedTrack() {
   return tracks.find((track) => track.id === selectedTrackId) || tracks[0];
 }
 
+function countFor({ action, targetType, targetId }) {
+  return Object.values(analyticsTotals).reduce((sum, record) => {
+    if (record.action !== action) return sum;
+    if (record.targetType !== targetType) return sum;
+    if (record.targetId !== targetId) return sum;
+    return sum + Number(record.count || 0);
+  }, 0);
+}
+
+function publicCountLabel(targetType, targetId, action) {
+  if (!readStatVisibility()[`${targetType}:${targetId}`]) return "";
+  const count = countFor({ action, targetType, targetId });
+  const noun = action.includes("stream") ? "streams" : action.includes("download") ? "downloads" : "views";
+  return `<span class="public-stat">${count} ${noun}</span>`;
+}
+
 function normalizeImage(image) {
   return { ...image, src: resolveMediaUrl(image.src) };
 }
@@ -314,7 +360,7 @@ async function loadFeaturedArtistConfig() {
     if (!response.ok) return;
     applyFeaturedArtistConfig(await response.json());
   } catch {
-    setPaymentStatus("Public viewing is open. Purchases connect when the ARHC server responds.");
+    setPaymentStatus("Public listening is open. Checkout will be available shortly.");
   }
 }
 
@@ -339,7 +385,30 @@ function trackPublicEvent({ action, targetType, targetId, targetTitle, targetUrl
     headers: { "Content-Type": "application/json" },
     keepalive: true,
     body: JSON.stringify(payload)
-  }).catch(() => {});
+  })
+    .then((response) => response.ok ? response.json() : null)
+    .then((result) => {
+      if (result?.totals) {
+        analyticsTotals = result.totals;
+        renderArtistDashboard();
+      }
+    })
+    .catch(() => {});
+}
+
+async function refreshAnalytics() {
+  const localRecord = readLocalRuntimeRecord();
+  analyticsTotals = { ...(localRecord.totals || {}) };
+  if (!runtimeApi) return;
+
+  try {
+    const response = await fetch(`${runtimeApi}/public/analytics`, { cache: "no-store" });
+    if (!response.ok) return;
+    const result = await response.json();
+    analyticsTotals = result.totals || analyticsTotals;
+  } catch {
+    // Local counts stay available when the live reporting endpoint cannot be reached.
+  }
 }
 
 function renderTracks() {
@@ -367,6 +436,7 @@ function renderTracks() {
           <span class="track-price">${track.price ? money(track.price) : "Free"}</span>
         </header>
         <p>Stream this title free. Downloads are ${money(track.price)} each.</p>
+        ${publicCountLabel("track", track.id, "stream.played")}
         <div class="track-actions">
           <button type="button" data-action="select-track" data-track-id="${track.id}">${active ? "Playing" : "Play Stream"}</button>
           ${track.listenUrl ? `<a class="listen-link" href="${track.listenUrl}" target="_blank" rel="noreferrer" data-track-link="${track.id}">Listen</a>` : ""}
@@ -374,6 +444,53 @@ function renderTracks() {
             ${unlocked ? "Download Track" : `Purchase Download ${money(track.price)}`}
           </button>
         </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderArtistDashboard() {
+  const dashboard = $("#artist-dashboard");
+  const navLink = document.querySelector(".artist-admin-link");
+  dashboard.hidden = !isArtistAdmin;
+  if (navLink) navLink.hidden = !isArtistAdmin;
+  if (!isArtistAdmin) return;
+
+  const visibility = readStatVisibility();
+  const rows = [
+    {
+      targetType: "live",
+      targetId: "artist-camera",
+      title: "Live Room",
+      primaryAction: "live.viewed",
+      secondaryAction: "page.viewed"
+    },
+    ...tracks.map((track) => ({
+      targetType: "track",
+      targetId: track.id,
+      title: track.title,
+      primaryAction: "stream.played",
+      secondaryAction: "download.payment_started"
+    }))
+  ];
+
+  $("#artist-stats-grid").innerHTML = rows.map((row) => {
+    const visibilityId = `${row.targetType}:${row.targetId}`;
+    const publicStats = Boolean(visibility[visibilityId]);
+    return `
+      <article class="artist-stat-card">
+        <span>${row.targetType === "live" ? "Live stream" : "Upload"}</span>
+        <strong>${row.title}</strong>
+        <div class="stat-counts">
+          <b>${countFor({ action: row.primaryAction, targetType: row.targetType, targetId: row.targetId })}</b>
+          <small>${row.targetType === "live" ? "live views" : "streams"}</small>
+          <b>${countFor({ action: row.secondaryAction, targetType: row.targetType === "live" ? "page" : row.targetType, targetId: row.targetType === "live" ? "artist-page" : row.targetId })}</b>
+          <small>${row.targetType === "live" ? "page views" : "purchase taps"}</small>
+        </div>
+        <label class="visibility-toggle">
+          <input type="checkbox" data-stat-visibility="${visibilityId}" ${publicStats ? "checked" : ""} />
+          <span>${publicStats ? "Counts public" : "Counts private"}</span>
+        </label>
       </article>
     `;
   }).join("");
@@ -513,8 +630,10 @@ async function downloadTrack(track) {
 }
 
 async function createPaypalOrder({ amount, purpose, label, email = "fan@example.com" }) {
+  const checkoutWindow = window.open("about:blank", "_blank", "noreferrer");
   if (!runtimeApi) {
-    setPaymentStatus("Connect the ARHC Render server to create PayPal orders for downloads and donations.");
+    checkoutWindow?.close();
+    setPaymentStatus("Checkout is being connected for Robbie Rolla downloads and donations.");
     return null;
   }
   const isDonation = purpose === "artist-tip";
@@ -530,7 +649,7 @@ async function createPaypalOrder({ amount, purpose, label, email = "fan@example.
       amount,
       currency: "USD",
       marketPurpose: purpose,
-      walletStatus: isDonation ? "Prototype Bitcoin access not required for donation" : "Not required for music download",
+      walletStatus: isDonation ? "Donation support" : "Music download",
       contactEmail: email,
       billingConsent: true
     })
@@ -540,13 +659,18 @@ async function createPaypalOrder({ amount, purpose, label, email = "fan@example.
   if (!response.ok) throw new Error(result.error || "PayPal order failed");
 
   if (!result.configured) {
-    setPaymentStatus(`${label} payment was recorded as pending. Add PayPal env before paid downloads can unlock.`);
+    checkoutWindow?.close();
+    setPaymentStatus(`${label} checkout is being prepared. Please try again shortly.`);
     return result;
   }
 
   if (result.approvalUrl) {
-    window.open(result.approvalUrl, "_blank", "noreferrer");
-    setPaymentStatus(`${label} PayPal order created. ${isDonation ? "Donation processing waits for capture verification." : "Download unlock waits for capture verification."}`);
+    if (checkoutWindow) {
+      checkoutWindow.location.href = result.approvalUrl;
+    } else {
+      window.location.href = result.approvalUrl;
+    }
+    setPaymentStatus(`${label} checkout opened in PayPal.`);
   }
 
   return result;
@@ -554,13 +678,17 @@ async function createPaypalOrder({ amount, purpose, label, email = "fan@example.
 
 function updateLiveControls() {
   const active = Boolean(mediaStream);
+  const livePublicCount = readStatVisibility()["live:artist-camera"]
+    ? `<span class="public-stat">${countFor({ action: "page.viewed", targetType: "page", targetId: "artist-page" })} views</span>`
+    : "";
   document.querySelector(".stream-controls")?.toggleAttribute("hidden", !isArtistAdmin);
   $("#start-live").disabled = active;
   $("#stop-live").disabled = !active;
   $("#toggle-video").disabled = !active;
   $("#toggle-audio").disabled = !active;
   $("#camera-placeholder").classList.toggle("is-hidden", active);
-  $("#live-room-status").textContent = active ? "Camera preview live" : isArtistAdmin ? "Artist controls ready" : "Viewer room open";
+  $("#live-room-status").textContent = active ? "Broadcast preview live" : isArtistAdmin ? "Artist room ready" : "Viewer room open";
+  $("#stream-access-pill").innerHTML = livePublicCount || "Public room";
 }
 
 async function startLive() {
@@ -631,6 +759,17 @@ document.addEventListener("click", async (event) => {
     });
   }
 
+  const liveLink = event.target.closest('a[href="#live"]');
+  if (liveLink) {
+    trackPublicEvent({
+      action: "live.viewed",
+      targetType: "live",
+      targetId: "artist-camera",
+      targetTitle: `${artistProfile.artistName} Live Room`,
+      targetUrl: location.href
+    });
+  }
+
   const videoChoice = event.target.closest("[data-select-video]");
   if (videoChoice) {
     videoRotationLocked = true;
@@ -648,6 +787,13 @@ document.addEventListener("click", async (event) => {
   }
 
   const button = event.target.closest("[data-action]");
+  const visibilityControl = event.target.closest("[data-stat-visibility]");
+  if (visibilityControl) {
+    const [targetType, targetId] = visibilityControl.dataset.statVisibility.split(":");
+    setStatVisibility(targetType, targetId, visibilityControl.checked);
+    return;
+  }
+
   if (!button) return;
 
   const track = tracks.find((candidate) => candidate.id === button.dataset.trackId);
@@ -772,7 +918,7 @@ $("#support-form").addEventListener("submit", async (event) => {
 
 $("#start-live").addEventListener("click", () => {
   if (!isArtistAdmin) {
-    $("#live-room-status").textContent = "Fans can watch and message. Artist camera controls are private.";
+    $("#live-room-status").textContent = "Fans can watch and message. Robbie Rolla controls the broadcast.";
     return;
   }
   startLive().catch((error) => {
@@ -804,6 +950,8 @@ async function initArtistPage() {
   renderImages();
   renderVideos();
   renderChat();
+  await refreshAnalytics();
+  renderArtistDashboard();
   updateLiveControls();
   trackPublicEvent({
     action: "page.viewed",

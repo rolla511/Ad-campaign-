@@ -17,6 +17,7 @@
             <a href="#music">Music</a>
             <a href="#playlists">Playlists</a>
             <a href="#fans">Fans</a>
+            <a class="artist-admin-link" href="#artist-dashboard" hidden>Stats</a>
           </nav>
           <div class="hero-content">
             <p class="eyebrow">Featured ARHC artist</p>
@@ -89,7 +90,7 @@
             <video id="artist-camera" autoplay playsinline muted poster="./assets/robbie-rolla-live.png"></video>
             <div id="camera-placeholder" class="camera-placeholder">
               <strong>Robbie Rolla Live</strong>
-              <span>Public viewers can watch and message. Artist camera controls stay private.</span>
+              <span>Fans can watch, listen, and send love from the room.</span>
             </div>
             <div class="stream-controls artist-only" aria-label="Artist live stream controls" hidden>
               <button id="start-live" type="button">Start Camera</button>
@@ -97,7 +98,7 @@
               <button id="toggle-audio" type="button" disabled>Mic On</button>
               <button id="stop-live" type="button" disabled>Stop</button>
             </div>
-            <div class="viewer-live-note">Live camera access is reserved for Robbie Rolla. Fans enter as viewers.</div>
+            <div class="viewer-live-note">Robbie Rolla controls the broadcast. Fans enter as viewers.</div>
           </div>
 
           <aside id="fans" class="fan-panel" aria-labelledby="fan-panel-title">
@@ -160,10 +161,21 @@
         </div>
         <div class="commerce-note">
           <strong>PayPal download purchase</strong>
-          <span>Each title is purchased separately for $1.99. Streaming remains public; download release waits for verified PayPal capture.</span>
+          <span>Each title is purchased separately for $1.99. Streaming remains open; downloads are released after checkout.</span>
         </div>
         <div id="now-playing" class="now-playing" aria-live="polite"></div>
         <div id="track-grid" class="track-grid"></div>
+      </section>
+
+      <section id="artist-dashboard" class="artist-dashboard" aria-labelledby="artist-dashboard-title" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Artist dashboard</p>
+            <h2 id="artist-dashboard-title">Views, Streams, And Visibility</h2>
+          </div>
+          <span>Robbie Rolla only</span>
+        </div>
+        <div id="artist-stats-grid" class="artist-stats-grid"></div>
       </section>
 
       <section id="playlists" class="playlist-section" aria-labelledby="playlist-title">
@@ -213,8 +225,8 @@
       <section class="bitcoin-section" aria-labelledby="bitcoin-title">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">The ARHC support coin</p>
-            <h2 id="bitcoin-title">Artist Access Support</h2>
+            <p class="eyebrow">The ARHC fan coin</p>
+            <h2 id="bitcoin-title">Support Robbie Rolla</h2>
           </div>
           <span>Fan support</span>
         </div>
@@ -222,17 +234,17 @@
           <article class="bitcoin-card">
             <span>Step 1</span>
             <strong>Fan supports Robbie Rolla</strong>
-            <small>Fan value can be recorded as ARHC support credit while the closed market model is finalized.</small>
+            <small>Support helps move the music, visuals, and live room forward.</small>
           </article>
           <article class="bitcoin-card">
             <span>Step 2</span>
             <strong>Artist access route</strong>
-            <small>Artist access stays inside The ARHC system and is not open public trading.</small>
+            <small>Fans can follow the artist access path as The ARHC opens more features.</small>
           </article>
           <article class="bitcoin-card">
             <span>Step 3</span>
             <strong>PayPal remains the real payment rail</strong>
-            <small>Donations and downloads use PayPal capture before any platform order can be processed.</small>
+            <small>Donations and downloads are handled through PayPal checkout.</small>
           </article>
         </div>
       </section>
@@ -253,7 +265,7 @@
           </label>
           <button type="submit">Open PayPal Donation</button>
         </form>
-        <div id="payment-status" class="payment-status" role="status">Robbie Rolla downloads are $1.99 per title. PayPal donations and downloads use verified PayPal Orders.</div>
+        <div id="payment-status" class="payment-status" role="status">Robbie Rolla downloads are $1.99 per title. Donations and downloads open through PayPal checkout.</div>
       </section>
     </main>
 

@@ -216,6 +216,7 @@ button:disabled {
 .live-section,
 .music-section,
 .playlist-section,
+.artist-dashboard,
 .promo-section,
 .image-section,
 .video-section,
@@ -682,6 +683,77 @@ input {
   box-shadow: var(--shadow);
 }
 
+.artist-dashboard[hidden] {
+  display: none;
+}
+
+.artist-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.artist-stat-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  background: var(--panel-solid);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.artist-stat-card > span {
+  color: var(--green);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.artist-stat-card strong {
+  font-size: 1.22rem;
+}
+
+.stat-counts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  align-items: baseline;
+}
+
+.stat-counts b {
+  color: var(--gold);
+  font-size: 1.55rem;
+}
+
+.stat-counts small {
+  color: var(--muted);
+}
+
+.visibility-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.visibility-toggle input {
+  width: 20px;
+  min-height: 20px;
+  accent-color: var(--green);
+}
+
+.public-stat {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid rgba(54, 197, 143, 0.32);
+  color: var(--green);
+  padding: 7px 10px;
+  background: rgba(54, 197, 143, 0.08);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
 .playlist-card strong {
   font-size: 1.35rem;
 }
@@ -885,6 +957,7 @@ input {
 
   .pulse-grid,
   .fan-path-grid,
+  .artist-stats-grid,
   .bitcoin-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -949,6 +1022,7 @@ input {
   .pulse-grid,
   .fan-path-grid,
   .playlist-grid,
+  .artist-stats-grid,
   .bitcoin-grid {
     grid-template-columns: 1fr;
   }
