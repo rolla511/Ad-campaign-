@@ -365,7 +365,7 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    if (paypalState.status !== 'APPROVED') {
+    if (paypalState.enabled && paypalState.status !== 'APPROVED') {
       setPaypalStatus('PayPal approval is required before submit.');
       return;
     }
