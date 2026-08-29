@@ -5,12 +5,13 @@ let artistProfile = {
   artistSlug: "robbie-rolla",
   artistName: "Robbie Rolla"
 };
+const isArtistAdmin = new URLSearchParams(location.search).get("artist") === "robbie-rolla";
 
 let promoLinks = [
   {
     label: "Audiomack",
     title: "BECKY (GOLD EDITION)",
-    detail: "Robbie Rolla, feat. soul girl?, produced by Jason Reeves, AWOBE INC MEDIA",
+    detail: "Robbie Rolla, produced by Jason Reeves, AWOBE INC MEDIA",
     url: "https://audiomack.com/robbie-rolla/song/becky-gold-edition",
     tone: "green"
   },
@@ -44,7 +45,7 @@ let promoLinks = [
   }
 ];
 
-let artistImages = [
+const localArtistImages = [
   {
     title: "Robbie Rolla GY Cover",
     detail: "Featured public artist image",
@@ -52,14 +53,9 @@ let artistImages = [
   },
   {
     title: "Robbie Rolla Live Room",
-    detail: "ARHC live-studio page hero image",
+    detail: "ARHC live page hero image",
     src: "./assets/robbie-rolla-live.png",
     fallback: "linear-gradient(135deg, #36c58f, #101718 50%, #e0ad4f)"
-  },
-  {
-    title: "Robbie Rolla GQ Cover",
-    detail: "Fitness and culture promo cover",
-    src: "./artist-media/robbie-rolla/robbie-rolla-gq-cover-light.png"
   },
   {
     title: "Poolside Focus",
@@ -87,6 +83,7 @@ let artistImages = [
     src: "./artist-media/robbie-rolla/robbie-rolla-race.png"
   }
 ];
+let artistImages = [...localArtistImages];
 
 let artistVideos = [
   {
@@ -105,7 +102,7 @@ let artistVideos = [
   }
 ];
 
-let tracks = [
+const localTracks = [
   {
     id: "we-belong-part-1",
     title: "We Belong",
@@ -131,6 +128,35 @@ let tracks = [
     fileName: "Robbie Rolla - We Belong Part 2 - for wishing.mp3",
     listenUrl: "",
     art: "radial-gradient(circle at 30% 22%, #f8faf7, #5ca8d8 34%, #141819 72%)"
+  },
+  {
+    id: "black-light",
+    title: "Black Light",
+    mood: "Robbie Rolla single",
+    price: 1.99,
+    paid: true,
+    isrc: "",
+    streamUrl: "./artist-audio/robbie-rolla/black-light.mp3",
+    downloadUrl: "./artist-audio/robbie-rolla/black-light.mp3",
+    fileName: "Robbie Rolla - Black Light.mp3",
+    listenUrl: "",
+    art: "linear-gradient(135deg, #101718, #7338a7 45%, #36c58f)"
+  }
+];
+let tracks = [...localTracks];
+
+let playlists = [
+  {
+    id: "artist-current-set",
+    title: "Robbie Rolla Current Set",
+    owner: "Artist playlist",
+    trackIds: ["we-belong-part-1", "we-belong-part-2-for-wishing", "black-light"]
+  },
+  {
+    id: "fan-after-hours",
+    title: "Fan After Hours",
+    owner: "Fan playlist",
+    trackIds: ["black-light", "we-belong-part-1"]
   }
 ];
 
@@ -145,6 +171,7 @@ let unlockedTracks = new Set(tracks.filter((track) => !track.paid).map((track) =
 let selectedVideoId = artistVideos[0]?.id || "";
 let videoSnippetTimer = null;
 let videoRotationLocked = false;
+let selectedTrackId = tracks[0]?.id || "";
 
 const $ = (selector) => document.querySelector(selector);
 const money = (value) => `$${Number(value || 0).toFixed(2)}`;
@@ -214,6 +241,23 @@ function normalizeTrack(track) {
   };
 }
 
+function mergeById(remoteItems, localItems) {
+  const merged = new Map();
+  [...(remoteItems || []), ...localItems].forEach((item) => {
+    const key = item?.id || item?.src || item?.title;
+    if (key) merged.set(key, { ...merged.get(key), ...item });
+  });
+  return [...merged.values()];
+}
+
+function keepRobbieOnlyImages(images) {
+  return images.filter((image) => !/gq-cover-light|lifestyle-collage/i.test(image.src || image.title || ""));
+}
+
+function selectedTrack() {
+  return tracks.find((track) => track.id === selectedTrackId) || tracks[0];
+}
+
 function normalizeImage(image) {
   return { ...image, src: resolveMediaUrl(image.src) };
 }
@@ -243,9 +287,12 @@ function applyFeaturedArtistConfig(config) {
     artistName: config.artistName || artistProfile.artistName
   };
   promoLinks = Array.isArray(config.promoLinks) ? config.promoLinks : promoLinks;
-  artistImages = Array.isArray(config.images) ? config.images.map(normalizeImage) : artistImages;
+  artistImages = Array.isArray(config.images)
+    ? keepRobbieOnlyImages(mergeById(config.images, localArtistImages)).map(normalizeImage)
+    : keepRobbieOnlyImages(artistImages).map(normalizeImage);
   artistVideos = Array.isArray(config.videos) ? config.videos.map(normalizeVideo) : artistVideos;
-  tracks = Array.isArray(config.tracks) ? config.tracks.map(normalizeTrack) : tracks;
+  tracks = Array.isArray(config.tracks) ? mergeById(config.tracks, localTracks).map(normalizeTrack) : tracks.map(normalizeTrack);
+  selectedTrackId = selectedTrack()?.id || "";
   selectedVideoId = selectedArtistVideo()?.id || "";
   unlockedTracks = new Set(tracks.filter((track) => !track.paid).map((track) => track.id));
 
@@ -267,7 +314,7 @@ async function loadFeaturedArtistConfig() {
     if (!response.ok) return;
     applyFeaturedArtistConfig(await response.json());
   } catch {
-    setPaymentStatus("Public viewing is available. Server artist controls are offline.");
+    setPaymentStatus("Public viewing is open. Purchases connect when the ARHC server responds.");
   }
 }
 
@@ -296,10 +343,21 @@ function trackPublicEvent({ action, targetType, targetId, targetTitle, targetUrl
 }
 
 function renderTracks() {
+  const activeTrack = selectedTrack();
+  $("#now-playing").innerHTML = activeTrack ? `
+    <div>
+      <span>Now streaming</span>
+      <strong>${activeTrack.title}</strong>
+      <small>${activeTrack.mood}</small>
+    </div>
+    <audio id="main-track-player" class="main-track-player" controls preload="metadata" src="${activeTrack.streamUrl || activeTrack.downloadUrl}" data-stream-track="${activeTrack.id}"></audio>
+  ` : "";
+
   $("#track-grid").innerHTML = tracks.map((track) => {
     const unlocked = unlockedTracks.has(track.id);
+    const active = track.id === activeTrack?.id;
     return `
-      <article class="track-card" data-track-id="${track.id}">
+      <article class="track-card ${active ? "active" : ""}" data-track-id="${track.id}">
         <div class="track-art" style="--art: ${track.art}"></div>
         <header>
           <div>
@@ -308,13 +366,28 @@ function renderTracks() {
           </div>
           <span class="track-price">${track.price ? money(track.price) : "Free"}</span>
         </header>
-        <p>Public stream access is open. Download purchase is ${money(track.price)} for this title only; each Robbie Rolla song is sold separately.</p>
-        <audio class="track-player" controls preload="metadata" src="${track.streamUrl || track.downloadUrl}" data-stream-track="${track.id}"></audio>
+        <p>Stream this title free. Downloads are ${money(track.price)} each.</p>
         <div class="track-actions">
+          <button type="button" data-action="select-track" data-track-id="${track.id}">${active ? "Playing" : "Play Stream"}</button>
           ${track.listenUrl ? `<a class="listen-link" href="${track.listenUrl}" target="_blank" rel="noreferrer" data-track-link="${track.id}">Listen</a>` : ""}
           <button type="button" data-action="${unlocked ? "download" : "pay"}" data-track-id="${track.id}">
             ${unlocked ? "Download Track" : `Purchase Download ${money(track.price)}`}
           </button>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderPlaylists() {
+  $("#playlist-grid").innerHTML = playlists.map((playlist) => {
+    const playlistTracks = playlist.trackIds.map((id) => tracks.find((track) => track.id === id)).filter(Boolean);
+    return `
+      <article class="playlist-card">
+        <span>${playlist.owner}</span>
+        <strong>${playlist.title}</strong>
+        <div class="playlist-tracks">
+          ${playlistTracks.map((track) => `<button type="button" data-action="select-track" data-track-id="${track.id}">${track.title}</button>`).join("")}
         </div>
       </article>
     `;
@@ -441,7 +514,7 @@ async function downloadTrack(track) {
 
 async function createPaypalOrder({ amount, purpose, label, email = "fan@example.com" }) {
   if (!runtimeApi) {
-    setPaymentStatus("Connect the ARHC Render server runtime to create PayPal orders for downloads and donations.");
+    setPaymentStatus("Connect the ARHC Render server to create PayPal orders for downloads and donations.");
     return null;
   }
   const isDonation = purpose === "artist-tip";
@@ -481,12 +554,13 @@ async function createPaypalOrder({ amount, purpose, label, email = "fan@example.
 
 function updateLiveControls() {
   const active = Boolean(mediaStream);
+  document.querySelector(".stream-controls")?.toggleAttribute("hidden", !isArtistAdmin);
   $("#start-live").disabled = active;
   $("#stop-live").disabled = !active;
   $("#toggle-video").disabled = !active;
   $("#toggle-audio").disabled = !active;
   $("#camera-placeholder").classList.toggle("is-hidden", active);
-  $("#live-room-status").textContent = active ? "Camera preview live" : "Waiting for artist camera";
+  $("#live-room-status").textContent = active ? "Camera preview live" : isArtistAdmin ? "Artist controls ready" : "Viewer room open";
 }
 
 async function startLive() {
@@ -578,6 +652,20 @@ document.addEventListener("click", async (event) => {
 
   const track = tracks.find((candidate) => candidate.id === button.dataset.trackId);
   if (!track) return;
+
+  if (button.dataset.action === "select-track") {
+    selectedTrackId = track.id;
+    renderTracks();
+    renderPlaylists();
+    trackPublicEvent({
+      action: "stream.selected",
+      targetType: "track",
+      targetId: track.id,
+      targetTitle: track.title,
+      targetUrl: track.streamUrl
+    });
+    return;
+  }
 
   if (button.dataset.action === "download") {
     downloadTrack(track);
@@ -683,6 +771,10 @@ $("#support-form").addEventListener("submit", async (event) => {
 });
 
 $("#start-live").addEventListener("click", () => {
+  if (!isArtistAdmin) {
+    $("#live-room-status").textContent = "Fans can watch and message. Artist camera controls are private.";
+    return;
+  }
   startLive().catch((error) => {
     $("#live-room-status").textContent = error.message;
   });
@@ -707,6 +799,7 @@ $("#toggle-audio").addEventListener("click", () => {
 async function initArtistPage() {
   await loadFeaturedArtistConfig();
   renderTracks();
+  renderPlaylists();
   renderPromoLinks();
   renderImages();
   renderVideos();

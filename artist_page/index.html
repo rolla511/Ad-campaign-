@@ -15,14 +15,15 @@
           <nav class="artist-nav" aria-label="Artist page">
             <a href="#live">Live</a>
             <a href="#music">Music</a>
+            <a href="#playlists">Playlists</a>
             <a href="#fans">Fans</a>
           </nav>
           <div class="hero-content">
             <p class="eyebrow">Featured ARHC artist</p>
             <h1 id="artist-title">Robbie Rolla</h1>
-            <p class="artist-line">The ARHC presents Robbie Rolla: live video streaming, fan messages, PayPal donations, prototype Bitcoin access support, and $1.99 song downloads sold separately.</p>
+            <p class="artist-line">The ARHC presents Robbie Rolla: music, live moments, fan messages, direct support, and $1.99 song downloads sold separately.</p>
             <div class="hero-actions">
-              <a class="primary-action" href="#live">Join Live Room</a>
+              <a class="primary-action" href="#live">Watch Live</a>
               <a class="secondary-action" href="#music">Buy Downloads</a>
             </div>
             <div class="hero-tags" aria-label="Robbie Rolla fan signals">
@@ -30,7 +31,7 @@
               <span>Robbie Rolla</span>
               <span>We Belong</span>
               <span>for wishing</span>
-              <span>R&B edge</span>
+              <span>Black Light</span>
               <span>Street soul</span>
             </div>
           </div>
@@ -38,7 +39,7 @@
             <span class="live-dot"></span>
             <div>
               <strong>Studio Room</strong>
-              <small id="live-room-status">Waiting for artist camera</small>
+              <small id="live-room-status">Viewer room open</small>
             </div>
           </aside>
         </div>
@@ -48,7 +49,7 @@
         <div class="pulse-copy">
           <p class="eyebrow">Artist signal</p>
           <h2 id="pulse-title">Robbie Rolla moves in more than one lane.</h2>
-          <p>For the casual viewer, the page lands fast. For a deeper fan, the music, visuals, live room, and support path all point back to one artist identity.</p>
+          <p>Music, visuals, live presence, and fan support all point back to one artist identity.</p>
         </div>
         <div class="pulse-grid" aria-label="Fan base dimensions">
           <article class="pulse-card green">
@@ -78,24 +79,25 @@
         <div class="section-heading">
           <div>
             <p class="eyebrow">Live stream</p>
-            <h2 id="live-title">Live Video Feed And Fan Message Board</h2>
+            <h2 id="live-title">Live Room And Fan Message Board</h2>
           </div>
           <span id="stream-access-pill">Public room</span>
         </div>
 
         <div class="live-grid">
           <div class="stream-stage">
-            <video id="artist-camera" autoplay playsinline muted></video>
+            <video id="artist-camera" autoplay playsinline muted poster="./assets/robbie-rolla-live.png"></video>
             <div id="camera-placeholder" class="camera-placeholder">
               <strong>Robbie Rolla Live</strong>
-              <span>Camera and microphone preview starts from this page.</span>
+              <span>Public viewers can watch and message. Artist camera controls stay private.</span>
             </div>
-            <div class="stream-controls" aria-label="Live stream controls">
+            <div class="stream-controls artist-only" aria-label="Artist live stream controls" hidden>
               <button id="start-live" type="button">Start Camera</button>
               <button id="toggle-video" type="button" disabled>Camera On</button>
               <button id="toggle-audio" type="button" disabled>Mic On</button>
               <button id="stop-live" type="button" disabled>Stop</button>
             </div>
+            <div class="viewer-live-note">Live camera access is reserved for Robbie Rolla. Fans enter as viewers.</div>
           </div>
 
           <aside id="fans" class="fan-panel" aria-labelledby="fan-panel-title">
@@ -138,7 +140,7 @@
           <a class="fan-path" href="#live" data-fan-path="room-energy">
             <span>Room energy</span>
             <strong>Looks for presence</strong>
-            <small>Camera and chat make the artist feel active now.</small>
+            <small>Live status and chat keep the artist page active.</small>
           </a>
           <a class="fan-path" href="#support-title" data-fan-path="supporter">
             <span>Supporter</span>
@@ -160,7 +162,19 @@
           <strong>PayPal download purchase</strong>
           <span>Each title is purchased separately for $1.99. Streaming remains public; download release waits for verified PayPal capture.</span>
         </div>
+        <div id="now-playing" class="now-playing" aria-live="polite"></div>
         <div id="track-grid" class="track-grid"></div>
+      </section>
+
+      <section id="playlists" class="playlist-section" aria-labelledby="playlist-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Playlists</p>
+            <h2 id="playlist-title">Artist And Fan Playlists</h2>
+          </div>
+          <span>Pick a lane</span>
+        </div>
+        <div id="playlist-grid" class="playlist-grid"></div>
       </section>
 
       <section class="promo-section" aria-labelledby="promo-title">
@@ -199,21 +213,21 @@
       <section class="bitcoin-section" aria-labelledby="bitcoin-title">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Prototype Bitcoin system</p>
-            <h2 id="bitcoin-title">The ARHC Artist Access Demo</h2>
+            <p class="eyebrow">The ARHC support coin</p>
+            <h2 id="bitcoin-title">Artist Access Support</h2>
           </div>
-          <span>Demo only</span>
+          <span>Fan support</span>
         </div>
         <div class="bitcoin-grid">
           <article class="bitcoin-card">
             <span>Step 1</span>
             <strong>Fan supports Robbie Rolla</strong>
-            <small>Fan value can be recorded as demo ARHC support credit while the real market model stays under review.</small>
+            <small>Fan value can be recorded as ARHC support credit while the closed market model is finalized.</small>
           </article>
           <article class="bitcoin-card">
             <span>Step 2</span>
             <strong>Artist access route</strong>
-            <small>The prototype models future artist Bitcoin access without creating public trading or custody.</small>
+            <small>Artist access stays inside The ARHC system and is not open public trading.</small>
           </article>
           <article class="bitcoin-card">
             <span>Step 3</span>
@@ -239,7 +253,7 @@
           </label>
           <button type="submit">Open PayPal Donation</button>
         </form>
-        <div id="payment-status" class="payment-status" role="status">Robbie Rolla downloads are $1.99 per title. PayPal donations and downloads use verified PayPal Orders when the runtime env is connected.</div>
+        <div id="payment-status" class="payment-status" role="status">Robbie Rolla downloads are $1.99 per title. PayPal donations and downloads use verified PayPal Orders.</div>
       </section>
     </main>
 
