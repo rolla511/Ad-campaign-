@@ -394,7 +394,6 @@
 <script src="paypal-priority-order-flow.js?v=20260717-priority-flow"></script>
 <script>
   const PRODUCTION_BACKEND = 'https://awroadside-fire-backend.onrender.com';
-  const TEMP_GENERIC_PASSWORD = 'Roadside2026!';
   const PRE_SIGNUP_PRICE = '10.99';
   const PRE_SIGNUP_CURRENCY = 'USD';
   const PAYPAL_SUBSCRIPTION_CLIENT_ID = 'ATlQjOYY5zVxVfLvtgcsiRzjABeDVtoLN5b8ZoYJCUxqChzP4Y5frmu2bTW8KgSxw4wcFOdNoTtW4o2s';
@@ -719,8 +718,9 @@
     const required = form.querySelectorAll('input[required], select[required]');
     for (const input of required) {
       const type = input.type;
-      if (type === 'checkbox') invalid = !input.checked;
-      else invalid = !String(input.value || '').trim();
+      const invalid = type === 'checkbox'
+        ? !input.checked
+        : !String(input.value || '').trim();
       if (invalid) {
         const label = input.closest('label');
         if (label) label.classList.add('field-error');
@@ -793,7 +793,6 @@
       email: formData.get('email'),
       phoneNumber: formData.get('phoneNumber'),
       zip: formData.get('zip'),
-      password: TEMP_GENERIC_PASSWORD,
       pendingProfile: true,
       pendingReason: 'Awaiting application release and profile completion',
       vehicle: {
