@@ -8,16 +8,19 @@
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
+    <img class="analytics-pixel" alt="" src="https://the-arhc.onrender.com/api/public/analytics/pixel?artistSlug=robbie-rolla&artistName=Robbie%20Rolla&action=page.server_viewed&targetType=page&targetId=artist-page&targetTitle=Robbie%20Rolla%20Artist%20Page" />
     <main class="artist-page">
       <section class="artist-hero" aria-labelledby="artist-title">
         <img src="./assets/robbie-rolla-live.png" alt="Robbie Rolla artist page live studio backdrop" />
         <div class="hero-overlay">
           <nav class="artist-nav" aria-label="Artist page">
+            <a href="./home.html">Home</a>
             <a href="#live">Live</a>
             <a href="#music">Music</a>
             <a href="#playlists">Playlists</a>
             <a href="#fans">Fans</a>
             <a class="artist-admin-link" href="#artist-dashboard" hidden>Stats</a>
+            <a class="artist-admin-link" href="#artist-upload" hidden>Upload</a>
           </nav>
           <div class="hero-content">
             <p class="eyebrow">Featured ARHC artist</p>
@@ -176,6 +179,32 @@
           <span>Robbie Rolla only</span>
         </div>
         <div id="artist-stats-grid" class="artist-stats-grid"></div>
+      </section>
+
+      <section id="artist-upload" class="artist-upload-section" aria-labelledby="artist-upload-title" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Artist upload</p>
+            <h2 id="artist-upload-title">Add Audio</h2>
+          </div>
+          <span>ISRC required</span>
+        </div>
+        <form id="artist-upload-form" class="artist-upload-form">
+          <label>
+            Song title
+            <input name="title" required placeholder="Song title" />
+          </label>
+          <label>
+            Existing ISRC
+            <input name="isrc" placeholder="Leave blank for The ARHC to assign one" />
+          </label>
+          <label>
+            MP3 audio
+            <input name="audio" type="file" accept="audio/mpeg,.mp3" required />
+          </label>
+          <button type="submit">Upload Audio</button>
+        </form>
+        <div id="artist-upload-status" class="payment-status" role="status">Each audio upload must carry one ISRC. Existing ISRCs are preserved.</div>
       </section>
 
       <section id="playlists" class="playlist-section" aria-labelledby="playlist-title">

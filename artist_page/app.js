@@ -5,7 +5,9 @@ let artistProfile = {
   artistSlug: "robbie-rolla",
   artistName: "Robbie Rolla"
 };
-const isArtistAdmin = new URLSearchParams(location.search).get("artist") === "robbie-rolla";
+const artistSessionKey = "arhc.robbie-rolla.artist-session";
+const artistTokenKey = "arhc.robbie-rolla.artist-token";
+const isArtistAdmin = (new URLSearchParams(location.search).get("artist") === "robbie-rolla" || sessionStorage.getItem(artistSessionKey) === "active") && Boolean(sessionStorage.getItem(artistTokenKey));
 
 let promoLinks = [
   {
@@ -289,8 +291,9 @@ function selectedTrack() {
 }
 
 function countFor({ action, targetType, targetId }) {
+  const actions = Array.isArray(action) ? action : [action];
   return Object.values(analyticsTotals).reduce((sum, record) => {
-    if (record.action !== action) return sum;
+    if (!actions.includes(record.action)) return sum;
     if (record.targetType !== targetType) return sum;
     if (record.targetId !== targetId) return sum;
     return sum + Number(record.count || 0);
@@ -451,9 +454,13 @@ function renderTracks() {
 
 function renderArtistDashboard() {
   const dashboard = $("#artist-dashboard");
-  const navLink = document.querySelector(".artist-admin-link");
+  const uploadSection = $("#artist-upload");
+  const navLinks = document.querySelectorAll(".artist-admin-link");
   dashboard.hidden = !isArtistAdmin;
-  if (navLink) navLink.hidden = !isArtistAdmin;
+  uploadSection.hidden = !isArtistAdmin;
+  navLinks.forEach((link) => {
+    link.hidden = !isArtistAdmin;
+  });
   if (!isArtistAdmin) return;
 
   const visibility = readStatVisibility();
@@ -463,7 +470,7 @@ function renderArtistDashboard() {
       targetId: "artist-camera",
       title: "Live Room",
       primaryAction: "live.viewed",
-      secondaryAction: "page.viewed"
+      secondaryAction: ["page.viewed", "page.server_viewed"]
     },
     ...tracks.map((track) => ({
       targetType: "track",
@@ -494,6 +501,73 @@ function renderArtistDashboard() {
       </article>
     `;
   }).join("");
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => resolve(String(reader.result).split(",")[1] || ""));
+    reader.addEventListener("error", () => reject(reader.error));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadArtistAudio(event) {
+  event.preventDefault();
+  const status = $("#artist-upload-status");
+  const token = sessionStorage.getItem(artistTokenKey);
+  if (!runtimeApi || !token) {
+    status.textContent = "Artist sign in is required before uploading audio.";
+    return;
+  }
+
+  const form = new FormData(event.currentTarget);
+  const audioFile = form.get("audio");
+  if (!audioFile || !audioFile.name) {
+    status.textContent = "Choose an MP3 before uploading.";
+    return;
+  }
+
+  status.textContent = "Uploading audio...";
+  const response = await fetch(`${runtimeApi}/artist/robbie-rolla/uploads/audio`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      title: form.get("title"),
+      isrc: form.get("isrc"),
+      fileName: audioFile.name,
+      audioBase64: await fileToBase64(audioFile)
+    })
+  });
+  const result = await response.json();
+  if (!response.ok) {
+    status.textContent = result.error || "Audio upload could not be completed.";
+    return;
+  }
+
+  const upload = result.upload;
+  tracks = mergeById(tracks, [{
+    id: upload.id,
+    title: upload.title,
+    mood: `${upload.isrcSource === "artist-supplied" ? "Artist supplied ISRC" : "The ARHC assigned ISRC"} ${upload.isrc}`,
+    price: 1.99,
+    paid: true,
+    isrc: upload.isrc,
+    streamUrl: resolveMediaUrl(upload.streamUrl),
+    downloadUrl: resolveMediaUrl(upload.streamUrl),
+    fileName: upload.fileName,
+    listenUrl: "",
+    art: "linear-gradient(135deg, #101718, #36c58f 45%, #e0ad4f)"
+  }]);
+  selectedTrackId = upload.id;
+  renderTracks();
+  renderPlaylists();
+  renderArtistDashboard();
+  status.textContent = `${upload.title} uploaded with ISRC ${upload.isrc}.`;
+  event.currentTarget.reset();
 }
 
 function renderPlaylists() {
@@ -679,7 +753,7 @@ async function createPaypalOrder({ amount, purpose, label, email = "fan@example.
 function updateLiveControls() {
   const active = Boolean(mediaStream);
   const livePublicCount = readStatVisibility()["live:artist-camera"]
-    ? `<span class="public-stat">${countFor({ action: "page.viewed", targetType: "page", targetId: "artist-page" })} views</span>`
+    ? `<span class="public-stat">${countFor({ action: ["page.viewed", "page.server_viewed"], targetType: "page", targetId: "artist-page" })} views</span>`
     : "";
   document.querySelector(".stream-controls")?.toggleAttribute("hidden", !isArtistAdmin);
   $("#start-live").disabled = active;
@@ -914,6 +988,12 @@ $("#support-form").addEventListener("submit", async (event) => {
   } catch (error) {
     setPaymentStatus(error.message);
   }
+});
+
+$("#artist-upload-form").addEventListener("submit", (event) => {
+  uploadArtistAudio(event).catch((error) => {
+    $("#artist-upload-status").textContent = error.message;
+  });
 });
 
 $("#start-live").addEventListener("click", () => {
