@@ -725,6 +725,25 @@ input {
   accent-color: var(--green);
 }
 
+.player-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.player-controls,
+.playlist-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.player-controls button {
+  min-height: 40px;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
 .track-card {
   display: grid;
   gap: 14px;
@@ -789,6 +808,10 @@ input {
   background: var(--panel-solid);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
+}
+
+.playlist-card.active {
+  border-color: rgba(54, 197, 143, 0.58);
 }
 
 .artist-dashboard[hidden] {
@@ -871,12 +894,18 @@ input {
   gap: 8px;
 }
 
-.playlist-tracks button {
+.playlist-tracks button,
+.playlist-actions button {
   min-height: 42px;
   background: rgba(255, 255, 255, 0.07);
   border-color: var(--line);
   color: var(--ink);
   text-align: left;
+}
+
+.playlist-tracks em {
+  color: var(--muted);
+  font-style: normal;
 }
 
 .promo-card {

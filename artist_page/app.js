@@ -174,6 +174,8 @@ let selectedVideoId = artistVideos[0]?.id || "";
 let videoSnippetTimer = null;
 let videoRotationLocked = false;
 let selectedTrackId = tracks[0]?.id || "";
+let activeQueueId = "artist-current-set";
+let fanQueue = [];
 
 const $ = (selector) => document.querySelector(selector);
 const money = (value) => `$${Number(value || 0).toFixed(2)}`;
@@ -288,6 +290,38 @@ function keepRobbieOnlyImages(images) {
 
 function selectedTrack() {
   return tracks.find((track) => track.id === selectedTrackId) || tracks[0];
+}
+
+function currentQueueTrackIds() {
+  if (activeQueueId === "fan-custom") {
+    return fanQueue.length ? fanQueue : tracks.map((track) => track.id);
+  }
+
+  const playlist = playlists.find((entry) => entry.id === activeQueueId);
+  return playlist?.trackIds?.length ? playlist.trackIds : tracks.map((track) => track.id);
+}
+
+function selectTrack(trackId, { autoplay = false } = {}) {
+  const track = tracks.find((candidate) => candidate.id === trackId);
+  if (!track) return;
+  selectedTrackId = track.id;
+  renderTracks();
+  renderPlaylists();
+
+  const player = $("#main-track-player");
+  if (autoplay && player) {
+    player.play().catch(() => {});
+  }
+}
+
+function moveInQueue(direction, { autoplay = true } = {}) {
+  const queue = currentQueueTrackIds();
+  if (!queue.length) return;
+  const currentIndex = Math.max(0, queue.indexOf(selectedTrackId));
+  const nextIndex = direction === "previous"
+    ? (currentIndex - 1 + queue.length) % queue.length
+    : (currentIndex + 1) % queue.length;
+  selectTrack(queue[nextIndex], { autoplay });
 }
 
 function countFor({ action, targetType, targetId }) {
@@ -416,13 +450,21 @@ async function refreshAnalytics() {
 
 function renderTracks() {
   const activeTrack = selectedTrack();
+  const queue = currentQueueTrackIds();
+  const queuePosition = Math.max(0, queue.indexOf(activeTrack?.id)) + 1;
   $("#now-playing").innerHTML = activeTrack ? `
     <div>
       <span>Now streaming</span>
       <strong>${activeTrack.title}</strong>
-      <small>${activeTrack.mood}</small>
+      <small>${activeTrack.mood} ${queue.length ? `- ${queuePosition} of ${queue.length}` : ""}</small>
     </div>
-    <audio id="main-track-player" class="main-track-player" controls preload="metadata" src="${activeTrack.streamUrl || activeTrack.downloadUrl}" data-stream-track="${activeTrack.id}"></audio>
+    <div class="player-stack">
+      <audio id="main-track-player" class="main-track-player" controls preload="metadata" src="${activeTrack.streamUrl || activeTrack.downloadUrl}" data-stream-track="${activeTrack.id}"></audio>
+      <div class="player-controls" aria-label="Playlist controls">
+        <button type="button" data-action="previous-track">Previous</button>
+        <button type="button" data-action="next-track">Next</button>
+      </div>
+    </div>
   ` : "";
 
   $("#track-grid").innerHTML = tracks.map((track) => {
@@ -442,6 +484,7 @@ function renderTracks() {
         ${publicCountLabel("track", track.id, "stream.played")}
         <div class="track-actions">
           <button type="button" data-action="select-track" data-track-id="${track.id}">${active ? "Playing" : "Play Stream"}</button>
+          <button type="button" data-action="add-fan-track" data-track-id="${track.id}">Add To Fan Playlist</button>
           ${track.listenUrl ? `<a class="listen-link" href="${track.listenUrl}" target="_blank" rel="noreferrer" data-track-link="${track.id}">Listen</a>` : ""}
           <button type="button" data-action="${unlocked ? "download" : "pay"}" data-track-id="${track.id}">
             ${unlocked ? "Download Track" : `Purchase Download ${money(track.price)}`}
@@ -571,18 +614,35 @@ async function uploadArtistAudio(event) {
 }
 
 function renderPlaylists() {
-  $("#playlist-grid").innerHTML = playlists.map((playlist) => {
+  const basePlaylists = playlists.map((playlist) => {
     const playlistTracks = playlist.trackIds.map((id) => tracks.find((track) => track.id === id)).filter(Boolean);
     return `
-      <article class="playlist-card">
+      <article class="playlist-card ${activeQueueId === playlist.id ? "active" : ""}">
         <span>${playlist.owner}</span>
         <strong>${playlist.title}</strong>
         <div class="playlist-tracks">
           ${playlistTracks.map((track) => `<button type="button" data-action="select-track" data-track-id="${track.id}">${track.title}</button>`).join("")}
         </div>
+        <button type="button" data-action="play-playlist" data-playlist-id="${playlist.id}">Play Playlist</button>
       </article>
     `;
-  }).join("");
+  });
+  const fanTracks = fanQueue.map((id) => tracks.find((track) => track.id === id)).filter(Boolean);
+  basePlaylists.push(`
+    <article class="playlist-card ${activeQueueId === "fan-custom" ? "active" : ""}">
+      <span>Fan playlist</span>
+      <strong>Your Listening Party Queue</strong>
+      <small>Build a set, press play, and let it run.</small>
+      <div class="playlist-tracks">
+        ${fanTracks.length ? fanTracks.map((track) => `<button type="button" data-action="select-track" data-track-id="${track.id}">${track.title}</button>`).join("") : "<em>Add songs from the music cards.</em>"}
+      </div>
+      <div class="playlist-actions">
+        <button type="button" data-action="play-playlist" data-playlist-id="fan-custom">Play Fan Playlist</button>
+        <button type="button" data-action="clear-fan-playlist">Clear</button>
+      </div>
+    </article>
+  `);
+  $("#playlist-grid").innerHTML = basePlaylists.join("");
 }
 
 function renderPromoLinks() {
@@ -870,13 +930,58 @@ document.addEventListener("click", async (event) => {
 
   if (!button) return;
 
+  if (button.dataset.action === "previous-track") {
+    moveInQueue("previous", { autoplay: true });
+    return;
+  }
+
+  if (button.dataset.action === "next-track") {
+    moveInQueue("next", { autoplay: true });
+    return;
+  }
+
+  if (button.dataset.action === "play-playlist") {
+    activeQueueId = button.dataset.playlistId || "artist-current-set";
+    const queue = currentQueueTrackIds();
+    selectTrack(queue[0], { autoplay: true });
+    trackPublicEvent({
+      action: "playlist.played",
+      targetType: "playlist",
+      targetId: activeQueueId,
+      targetTitle: button.closest(".playlist-card")?.querySelector("strong")?.textContent || "Playlist",
+      targetUrl: location.href
+    });
+    return;
+  }
+
+  if (button.dataset.action === "clear-fan-playlist") {
+    fanQueue = [];
+    activeQueueId = "artist-current-set";
+    renderTracks();
+    renderPlaylists();
+    return;
+  }
+
   const track = tracks.find((candidate) => candidate.id === button.dataset.trackId);
   if (!track) return;
 
-  if (button.dataset.action === "select-track") {
-    selectedTrackId = track.id;
+  if (button.dataset.action === "add-fan-track") {
+    if (!fanQueue.includes(track.id)) fanQueue.push(track.id);
+    activeQueueId = "fan-custom";
     renderTracks();
     renderPlaylists();
+    trackPublicEvent({
+      action: "playlist.track_added",
+      targetType: "track",
+      targetId: track.id,
+      targetTitle: track.title,
+      targetUrl: track.streamUrl
+    });
+    return;
+  }
+
+  if (button.dataset.action === "select-track") {
+    selectTrack(track.id, { autoplay: true });
     trackPublicEvent({
       action: "stream.selected",
       targetType: "track",
@@ -955,6 +1060,7 @@ document.addEventListener("ended", (event) => {
   const player = event.target.closest?.("[data-stream-track]");
   if (!player) return;
   const track = tracks.find((candidate) => candidate.id === player.dataset.streamTrack);
+  moveInQueue("next", { autoplay: true });
   trackPublicEvent({
     action: "stream.completed",
     targetType: "track",
