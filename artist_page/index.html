@@ -9,6 +9,14 @@
   </head>
   <body>
     <img class="analytics-pixel" alt="" src="https://the-arhc.onrender.com/api/public/analytics/pixel?artistSlug=robbie-rolla&artistName=Robbie%20Rolla&action=page.server_viewed&targetType=page&targetId=artist-page&targetTitle=Robbie%20Rolla%20Artist%20Page" />
+    <nav class="bottom-jump-nav" aria-label="Quick page jumps">
+      <a href="./home.html">Home</a>
+      <a href="#live">Live</a>
+      <a href="#music">Music</a>
+      <a href="#playlists">Playlists</a>
+      <a href="#fans">Fans</a>
+      <a href="#support-title">Support</a>
+    </nav>
     <main class="artist-page">
       <section class="artist-hero" aria-labelledby="artist-title">
         <img src="./assets/robbie-rolla-live.png" alt="Robbie Rolla artist page live studio backdrop" />
@@ -191,6 +199,21 @@
         </div>
         <form id="artist-upload-form" class="artist-upload-form">
           <label>
+            Upload type
+            <select name="uploadType">
+              <option value="single">Single song</option>
+              <option value="album">Album, volume, or series</option>
+            </select>
+          </label>
+          <label>
+            Album, volume, or series name
+            <input name="albumTitle" placeholder="Optional for singles" />
+          </label>
+          <label>
+            Existing album ISRC
+            <input name="albumIsrc" placeholder="Optional collection reference" />
+          </label>
+          <label>
             Song title
             <input name="title" required placeholder="Song title" />
           </label>
@@ -200,11 +223,11 @@
           </label>
           <label>
             MP3 audio
-            <input name="audio" type="file" accept="audio/mpeg,.mp3" required />
+            <input name="audio" type="file" accept="audio/mpeg,.mp3" multiple required />
           </label>
           <button type="submit">Upload Audio</button>
         </form>
-        <div id="artist-upload-status" class="payment-status" role="status">Each audio upload must carry one ISRC. Existing ISRCs are preserved.</div>
+        <div id="artist-upload-status" class="payment-status" role="status">Each audio file gets its own ISRC. Album, volume, and series uploads can also carry one collection reference.</div>
       </section>
 
       <section id="playlists" class="playlist-section" aria-labelledby="playlist-title">

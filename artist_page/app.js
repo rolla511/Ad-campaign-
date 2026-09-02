@@ -565,51 +565,71 @@ async function uploadArtistAudio(event) {
   }
 
   const form = new FormData(event.currentTarget);
-  const audioFile = form.get("audio");
-  if (!audioFile || !audioFile.name) {
-    status.textContent = "Choose an MP3 before uploading.";
+  const audioFiles = form.getAll("audio").filter((file) => file && file.name);
+  if (!audioFiles.length) {
+    status.textContent = "Choose at least one MP3 before uploading.";
     return;
   }
 
-  status.textContent = "Uploading audio...";
-  const response = await fetch(`${runtimeApi}/artist/robbie-rolla/uploads/audio`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      title: form.get("title"),
-      isrc: form.get("isrc"),
-      fileName: audioFile.name,
-      audioBase64: await fileToBase64(audioFile)
-    })
-  });
-  const result = await response.json();
-  if (!response.ok) {
-    status.textContent = result.error || "Audio upload could not be completed.";
-    return;
+  const uploads = [];
+  const uploadType = form.get("uploadType");
+  const albumTitle = String(form.get("albumTitle") || "").trim();
+  const albumIsrc = String(form.get("albumIsrc") || "").trim();
+  const singleTitle = String(form.get("title") || "").trim();
+  const singleExistingIsrc = String(form.get("isrc") || "").trim();
+
+  for (const [index, audioFile] of audioFiles.entries()) {
+    const derivedTitle = audioFiles.length === 1
+      ? singleTitle
+      : audioFile.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
+    status.textContent = `Uploading ${index + 1} of ${audioFiles.length}: ${derivedTitle || audioFile.name}`;
+
+    const response = await fetch(`${runtimeApi}/artist/robbie-rolla/uploads/audio`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        uploadType,
+        albumTitle,
+        albumIsrc,
+        title: derivedTitle || audioFile.name,
+        isrc: audioFiles.length === 1 ? singleExistingIsrc : "",
+        fileName: audioFile.name,
+        audioBase64: await fileToBase64(audioFile)
+      })
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      status.textContent = result.error || `${audioFile.name} could not be uploaded.`;
+      return;
+    }
+    uploads.push(result.upload);
   }
 
-  const upload = result.upload;
-  tracks = mergeById(tracks, [{
+  tracks = mergeById(tracks, uploads.map((upload) => ({
     id: upload.id,
     title: upload.title,
     mood: `${upload.isrcSource === "artist-supplied" ? "Artist supplied ISRC" : "The ARHC assigned ISRC"} ${upload.isrc}`,
     price: 1.99,
     paid: true,
     isrc: upload.isrc,
+    collectionIsrc: upload.collectionIsrc || "",
+    collectionTitle: upload.albumTitle || "",
     streamUrl: resolveMediaUrl(upload.streamUrl),
     downloadUrl: resolveMediaUrl(upload.streamUrl),
     fileName: upload.fileName,
     listenUrl: "",
     art: "linear-gradient(135deg, #101718, #36c58f 45%, #e0ad4f)"
-  }]);
-  selectedTrackId = upload.id;
+  })));
+  selectedTrackId = uploads[0].id;
   renderTracks();
   renderPlaylists();
   renderArtistDashboard();
-  status.textContent = `${upload.title} uploaded with ISRC ${upload.isrc}.`;
+  status.textContent = uploads.length === 1
+    ? `${uploads[0].title} uploaded with ISRC ${uploads[0].isrc}.`
+    : `${uploads.length} tracks uploaded. Each track received its own ISRC${albumTitle ? ` under ${albumTitle}` : ""}.`;
   event.currentTarget.reset();
 }
 
@@ -764,9 +784,7 @@ async function downloadTrack(track) {
 }
 
 async function createPaypalOrder({ amount, purpose, label, email = "fan@example.com" }) {
-  const checkoutWindow = window.open("about:blank", "_blank", "noreferrer");
   if (!runtimeApi) {
-    checkoutWindow?.close();
     setPaymentStatus("Checkout is being connected for Robbie Rolla downloads and donations.");
     return null;
   }
@@ -793,20 +811,17 @@ async function createPaypalOrder({ amount, purpose, label, email = "fan@example.
   if (!response.ok) throw new Error(result.error || "PayPal order failed");
 
   if (!result.configured) {
-    checkoutWindow?.close();
     setPaymentStatus(`${label} checkout is being prepared. Please try again shortly.`);
     return result;
   }
 
   if (result.approvalUrl) {
-    if (checkoutWindow) {
-      checkoutWindow.location.href = result.approvalUrl;
-    } else {
-      window.location.href = result.approvalUrl;
-    }
-    setPaymentStatus(`${label} checkout opened in PayPal.`);
+    setPaymentStatus(`${label} checkout opening in PayPal.`);
+    window.location.href = result.approvalUrl;
+    return result;
   }
 
+  setPaymentStatus("PayPal did not return a checkout link. Check the live PayPal env and Render logs.");
   return result;
 }
 

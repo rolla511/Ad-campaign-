@@ -19,6 +19,7 @@
 
 body {
   margin: 0;
+  padding-bottom: 76px;
   background: #0e1212;
   color: var(--ink);
 }
@@ -35,8 +36,39 @@ body {
   pointer-events: none;
 }
 
+.bottom-jump-nav {
+  position: fixed;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(8, 11, 11, 0.92);
+  border-top: 1px solid var(--line);
+  backdrop-filter: blur(18px);
+}
+
+.bottom-jump-nav a {
+  flex: 0 0 auto;
+  min-width: 74px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0 12px;
+  color: var(--ink);
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--line);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -666,6 +698,14 @@ input {
   min-width: 0;
 }
 
+select {
+  min-height: 46px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--ink);
+  padding: 11px 12px;
+}
+
 .chat-form {
   margin-top: 14px;
 }
@@ -1131,6 +1171,34 @@ input {
       linear-gradient(90deg, rgba(8, 10, 10, 0.9), rgba(8, 10, 10, 0.58)),
       linear-gradient(0deg, rgba(8, 10, 10, 0.82), rgba(8, 10, 10, 0.08));
   }
+
+  .home-overlay {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    align-content: center;
+    gap: 18px;
+    padding: 20px 18px calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .home-brand {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .home-content {
+    align-self: end;
+    max-width: 100%;
+  }
+
+  .home-content h1 {
+    font-size: clamp(3.1rem, 18vw, 5.4rem);
+    line-height: 0.9;
+    overflow-wrap: anywhere;
+  }
+
+  .artist-login-panel {
+    align-self: start;
+  }
 }
 
 @media (max-width: 620px) {
@@ -1147,8 +1215,15 @@ input {
   .primary-action,
   .secondary-action,
   button,
-  input {
+  input,
+  select {
     width: 100%;
+  }
+
+  .bottom-jump-nav a,
+  .player-controls button,
+  .playlist-actions button {
+    width: auto;
   }
 
   .hero-tags span {
@@ -1174,5 +1249,18 @@ input {
     position: static;
     padding: 12px;
     background: #111818;
+  }
+
+  .stream-controls:not([hidden]) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stream-controls:not([hidden]) button {
+    width: 100%;
+  }
+
+  .viewer-live-note {
+    position: static;
   }
 }
