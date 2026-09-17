@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Robbie Rolla | The ARHC Access</title>
+    <meta name="arhc-api-base" content="https://the-arhc.onrender.com/api" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body class="home-body">
+    <main class="home-page">
+      <section class="home-hero" aria-labelledby="home-title">
+        <img src="./assets/robbie-rolla-live.png" alt="Robbie Rolla" />
+        <div class="home-overlay">
+          <div class="home-brand">
+            <span>The ARHC</span>
+            <strong>Robbie Rolla</strong>
+          </div>
+
+          <div class="home-content">
+            <p class="eyebrow">Featured artist access</p>
+            <h1 id="home-title">Enter The Robbie Rolla Page</h1>
+            <p>Fans can listen, watch, message, support, and buy downloads. Robbie Rolla can enter the artist room for live controls and private stats.</p>
+
+            <div class="home-actions">
+              <a class="primary-action" href="./index.html">Continue As Visitor</a>
+              <button id="show-artist-login" class="secondary-action" type="button">Artist Sign In</button>
+            </div>
+          </div>
+
+          <form id="artist-login-form" class="artist-login-panel" hidden>
+            <div>
+              <p class="eyebrow">Artist room</p>
+              <h2>Robbie Rolla Sign In</h2>
+            </div>
+            <label>
+              Artist name
+              <input name="artistName" autocomplete="username" required placeholder="Robbie Rolla" />
+            </label>
+            <label>
+              Artist access code
+              <input name="accessCode" type="password" autocomplete="current-password" required />
+            </label>
+            <button type="submit">Open Artist Room</button>
+            <p id="artist-login-status" class="login-status" role="status"></p>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const artistSessionKey = "arhc.robbie-rolla.artist-session";
+      const artistTokenKey = "arhc.robbie-rolla.artist-token";
+      const configuredApiBase = document.querySelector('meta[name="arhc-api-base"]')?.content.trim().replace(/\/$/, "");
+      const loginForm = document.querySelector("#artist-login-form");
+      const loginStatus = document.querySelector("#artist-login-status");
+
+      document.querySelector("#show-artist-login").addEventListener("click", () => {
+        loginForm.hidden = false;
+        loginForm.querySelector("input").focus();
+      });
+
+      loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = new FormData(loginForm);
+        const artistName = String(form.get("artistName") || "").trim().toLowerCase();
+        const accessCode = String(form.get("accessCode") || "").trim();
+
+        if (!artistName.includes("robbie") || !accessCode) {
+          loginStatus.textContent = "Enter the artist name and access code.";
+          return;
+        }
+
+        try {
+          loginStatus.textContent = "Checking artist access...";
+          const response = await fetch(`${configuredApiBase}/artist/robbie-rolla/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ artistName, accessCode })
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || "Artist access was not accepted.");
+          sessionStorage.setItem(artistSessionKey, "active");
+          sessionStorage.setItem(artistTokenKey, result.token);
+          window.location.href = "./index.html?artist=robbie-rolla#live";
+        } catch (error) {
+          loginStatus.textContent = error.message;
+        }
+      });
+    </script>
+  </body>
+</html>
