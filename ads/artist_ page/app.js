@@ -200,7 +200,8 @@ const defaultStatVisibility = {
   "live:artist-camera": false,
   "track:we-belong-part-1": true,
   "track:we-belong-part-2-for-wishing": true,
-  "track:black-light": true
+  "track:black-light": true,
+  "track:beyond-the-paint-freestyle": true
 };
 
 function readLocalRuntimeRecord() {
@@ -214,6 +215,21 @@ function readLocalRuntimeRecord() {
 function writeLocalRuntimeRecord(record) {
   localStorage.setItem(localRuntimeRecordKey, JSON.stringify(record));
   window.arhcRuntimeRecord = record;
+}
+
+function rememberAnalyticsTotals(totals) {
+  if (!totals || typeof totals !== "object") return;
+  const record = readLocalRuntimeRecord();
+  writeLocalRuntimeRecord({
+    events: Array.isArray(record.events) ? record.events : [],
+    totals
+  });
+}
+
+function renderAnalyticsViews() {
+  renderTracks();
+  renderArtistDashboard();
+  updateLiveControls();
 }
 
 function readStatVisibility() {
@@ -388,6 +404,10 @@ function applyFeaturedArtistConfig(config) {
     : keepRobbieOnlyImages(artistImages).map(normalizeImage);
   artistVideos = Array.isArray(config.videos) ? config.videos.map(normalizeVideo) : artistVideos;
   tracks = Array.isArray(config.tracks) ? mergeById(config.tracks, localTracks).map(normalizeTrack) : tracks.map(normalizeTrack);
+  if (config.analytics?.totals) {
+    analyticsTotals = config.analytics.totals;
+    rememberAnalyticsTotals(analyticsTotals);
+  }
   selectedTrackId = selectedTrack()?.id || "";
   selectedVideoId = selectedArtistVideo()?.id || "";
   unlockedTracks = new Set(tracks.filter((track) => !track.paid).map((track) => track.id));
@@ -440,7 +460,8 @@ function trackPublicEvent({ action, targetType, targetId, targetTitle, targetUrl
     .then((result) => {
       if (result?.totals) {
         analyticsTotals = result.totals;
-        renderArtistDashboard();
+        rememberAnalyticsTotals(analyticsTotals);
+        renderAnalyticsViews();
       }
     })
     .catch(() => {});
@@ -456,6 +477,7 @@ async function refreshAnalytics() {
     if (!response.ok) return;
     const result = await response.json();
     analyticsTotals = result.totals || analyticsTotals;
+    rememberAnalyticsTotals(analyticsTotals);
   } catch {
     // Local counts stay available when the live reporting endpoint cannot be reached.
   }
@@ -1165,8 +1187,7 @@ async function initArtistPage() {
   renderVideos();
   renderChat();
   await refreshAnalytics();
-  renderArtistDashboard();
-  updateLiveControls();
+  renderAnalyticsViews();
   trackPublicEvent({
     action: "page.viewed",
     targetType: "page",
@@ -1177,3 +1198,13 @@ async function initArtistPage() {
 }
 
 initArtistPage();
+
+window.addEventListener("pageshow", () => {
+  refreshAnalytics().then(renderAnalyticsViews).catch(() => {});
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    refreshAnalytics().then(renderAnalyticsViews).catch(() => {});
+  }
+});
