@@ -34,9 +34,15 @@ function reset() {
   clearRows("No subscriber records loaded. Connect with owner access to search PostgreSQL.");
 }
 
+function revokeOwnerSession(session) {
+  if (session?.token) fetch(`${SUBSCRIBER_BACKEND_URL}/api/buyer/logout`, { method: "POST", headers: { Authorization: `Bearer ${session.token}` }, cache: "no-store", credentials: "omit", redirect: "error", referrerPolicy: "no-referrer", keepalive: true }).catch(() => {});
+}
+
 function forget() {
+  const previous = access;
   access = null; auth.reset(); reset();
   message("disconnected", "Owner access and displayed records cleared. No database data was erased.");
+  revokeOwnerSession(previous);
 }
 
 function render(data) {
@@ -62,7 +68,7 @@ function render(data) {
 }
 
 async function load() {
-  if (!access) { message("error", "Connect with platform owner access first. Subscriber login is not database-admin authorization."); return; }
+  if (!access || !(Date.parse(access.expiresAt) > Date.now())) { access = null; reset(); message("error", "Sign in with your platform owner username and password first. Subscriber login is not database-admin authorization."); return; }
   reset();
   const current = generation;
   const controller = new AbortController(); pending = controller;
@@ -74,13 +80,13 @@ async function load() {
     if (current !== generation) return;
     if (!configuration.ok || capabilities.subscriberReportVersion !== 1) throw new Error("The subscriber-report API is not deployed on Render yet. Deploy the backend report module and server changes together.");
     const response = await fetch(`${endpoint}?${new URLSearchParams(selected)}`, {
-      headers: { Authorization: `Bearer ${access.token}`, ...(access.device ? { "X-Device-Token": access.device } : {}) },
+      headers: { Authorization: `Bearer ${access.token}` },
       cache: "no-store", credentials: "omit", redirect: "error", referrerPolicy: "no-referrer", signal: controller.signal
     });
     if (response.status === 404) throw new Error("The subscriber-report API is not deployed on Render yet. Deploy the backend report module and server changes together.");
     const data = await response.json();
     if (current !== generation) return;
-    if (response.status === 401 || response.status === 403) { access = null; throw new Error("Owner authorization was rejected. Use an authorized admin/primary-buyer token and any existing trusted-admin token required by your backend."); }
+    if (response.status === 401 || response.status === 403) { access = null; throw new Error("Owner authorization was rejected or expired. Sign in again with the platform primary-buyer username and password."); }
     if (!response.ok) throw new Error(data.message || `Subscriber database request failed: HTTP ${response.status}`);
     if (data.scope !== "quick-sale-subscribers" || data.storage !== "postgresql" || data.readOnly !== true || !Array.isArray(data.rows) || !data.result || !data.totals || !Number.isFinite(Date.parse(data.asOf))) throw new Error("The backend did not return an authenticated PostgreSQL subscriber report.");
     render(data);
@@ -90,12 +96,37 @@ async function load() {
   } finally { clearTimeout(timeout); if (current === generation) pending = null; }
 }
 
-auth.addEventListener("submit", (event) => {
+auth.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const token = auth.elements.token.value.trim();
-  if (!token) { message("error", "Enter an owner access token. Never use a subscriber password or database URL."); return; }
-  access = { token, device: auth.elements.device.value.trim() }; auth.reset();
-  selected.offset = 0; load();
+  const username = auth.elements.username.value.trim();
+  const password = auth.elements.password.value;
+  if (!username || !password) { message("error", "Enter your platform owner username and password. No manually created access token is needed."); return; }
+  forget();
+  const current = generation;
+  const controller = new AbortController(); pending = controller;
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  message("loading", "Checking the backend and signing in as the platform owner…");
+  try {
+    const configuration = await fetch(`${SUBSCRIBER_BACKEND_URL}/api/quick-sale/config`, { cache: "no-store", credentials: "omit", redirect: "error", referrerPolicy: "no-referrer", signal: controller.signal });
+    const capabilities = await configuration.json();
+    if (current !== generation) return;
+    if (!configuration.ok || capabilities.subscriberReportVersion !== 1) throw new Error("The subscriber-report API is not deployed on Render yet. Deploy the backend report module and server changes together.");
+    const response = await fetch(`${SUBSCRIBER_BACKEND_URL}/api/buyer/login`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }),
+      cache: "no-store", credentials: "omit", redirect: "error", referrerPolicy: "no-referrer", signal: controller.signal
+    });
+    const data = await response.json();
+    if (current !== generation) { if (response.ok) revokeOwnerSession(data.session); return; }
+    if (!response.ok) throw new Error(response.status === 503 ? "Owner sign-in is not configured or available on the backend. Use an existing primary-buyer account, or configure JUNKCAR_BUYER_USERNAME and JUNKCAR_BUYER_PASSWORD on Render." : "Owner sign-in failed. Use your platform primary-buyer credentials, not a Quick Sale subscriber login.");
+    if (!data.session?.token || data.session.account?.role !== "primary" || !(Date.parse(data.session.expiresAt) > Date.now())) { revokeOwnerSession(data.session); throw new Error("This account is not an authorized platform owner. Only the primary buyer can read subscriber payment records."); }
+    access = { token: data.session.token, expiresAt: data.session.expiresAt };
+    selected.offset = 0;
+    clearTimeout(timeout);
+    pending = null;
+    await load();
+  } catch (error) {
+    if (current === generation) { access = null; clearRows("No current database records loaded. A failed sign-in does not mean there are zero subscribers."); message("error", error.name === "AbortError" ? "Owner sign-in timed out. Retry when the backend is available." : error.message); }
+  } finally { clearTimeout(timeout); if (current === generation) pending = null; }
 });
 form.addEventListener("submit", (event) => { event.preventDefault(); selected = { q: form.elements.q.value.trim(), mode: form.elements.mode.value, offset: 0, limit: 100 }; load(); });
 document.querySelector("#subscriber-refresh").addEventListener("click", load);
