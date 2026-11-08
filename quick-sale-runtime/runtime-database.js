@@ -1,37 +1,86 @@
 const status = document.querySelector("#runtime-status");
+const connection = document.querySelector("#runtime-connection");
 const workspace = document.querySelector("#runtime-workspace");
+const form = document.querySelector("#runtime-query");
 const refreshButton = document.querySelector("#runtime-refresh");
 let active = true;
 let pending = null;
 let generation = 0;
+let snapshot = null;
+let receivedAt = 0;
+let query = { collection: "users", offset: 0, limit: 100, live: "false" };
+let countdowns = [];
 
-const date = (value) => value ? new Date(value).toLocaleString() : "Not scheduled";
-function table(selector, records, values) {
-  const target = document.querySelector(selector);
-  target.replaceChildren();
+const date = (value) => value ? new Date(value).toLocaleString() : "—";
+const vehicle = (record) => [record.vehicle?.year, record.vehicle?.make, record.vehicle?.model].filter(Boolean).join(" ");
+const columns = {
+  users: { title: "Quick Users", date: "user creation", fields: [["Username", "username"], ["User ID", "id"], ["Created at", "createdAt", "date"], ["Last observed", "lastSeenAt", "date"], ["Buyer leads observed", "buyerLeads"], ["Seller leads observed", "sellerLeads"], ["Buyer deadline", "buyerExpiresAt", "date"], ["Seller deadline", "sellerExpiresAt", "date"], ["Erases at", "expiresAt", "date"], ["Time left", "expiresAt", "countdown"]] },
+  sellerPosts: { title: "Seller requests", date: "vehicle posting", fields: [["Listing ID", "id"], ["Seller", "username"], ["Vehicle", "vehicle", vehicle], ["ZIP", "zip"], ["Status", "status"], ["Posted at", "createdAt", "date"], ["Erases at", "expiresAt", "date"], ["Time left", "expiresAt", "countdown"]] },
+  buyerRequests: { title: "Buyer requests", date: "request update", fields: [["Request ID", "id"], ["Buyer", "username"], ["Make", "make"], ["Model", "model"], ["ZIP", "zip"], ["Radius (miles)", "radiusMiles"], ["Saved / updated", "updatedAt", "date"], ["Erases at", "expiresAt", "date"], ["Time left", "expiresAt", "countdown"]] },
+  matches: { title: "Matches made", date: "match delivery", fields: [["Match ID", "id"], ["Listing ID", "listingId"], ["Seller", "sellerUsername"], ["Buyer", "buyerUsername"], ["Status", "status"], ["Delivered at", "notifiedAt", "date"], ["Respond by", "deadline", "date"], ["Response left", "deadline", "countdown"], ["Erases at", "expiresAt", "date"], ["Time left", "expiresAt", "countdown"]] }
+};
+
+function state(kind, message) {
+  status.textContent = message; status.dataset.state = kind;
+  connection.textContent = { connected: "Connected · Live snapshot", error: snapshot ? "Connection lost · Last snapshot" : "Not connected", paused: "Paused", loading: "Loading runtime…" }[kind];
+  connection.dataset.state = kind;
+  document.querySelector("#runtime-help").open = kind === "error";
+}
+
+function serverTime() { return snapshot ? Date.parse(snapshot.asOf) + Date.now() - receivedAt : Date.now(); }
+
+function remaining(value) {
+  if (!value) return "No fixed deadline";
+  let seconds = Math.max(0, Math.ceil((Date.parse(value) - serverTime()) / 1000));
+  if (!seconds) return "Expired";
+  const days = Math.floor(seconds / 86400); seconds %= 86400;
+  const hours = Math.floor(seconds / 3600); seconds %= 3600;
+  const minutes = Math.floor(seconds / 60); seconds %= 60;
+  return `${days ? `${days}d ` : ""}${hours}h ${minutes}m ${seconds}s`;
+}
+
+function render() {
+  const selected = columns[query.collection];
+  const records = snapshot?.rows[query.collection] || [];
+  const heading = document.querySelector("#runtime-columns");
+  const body = document.querySelector("#runtime-records");
+  heading.replaceChildren(); body.replaceChildren(); countdowns = [];
+  for (const [label] of selected.fields) { const cell = document.createElement("th"); cell.scope = "col"; cell.textContent = label; heading.append(cell); }
+  document.querySelector("#runtime-collection-title").textContent = selected.title;
+  document.querySelector("#runtime-caption").textContent = `${selected.title} · Current runtime records`;
+  document.querySelector("#runtime-date-hint").textContent = `Date filters use ${selected.date} time. Enter dates in your local timezone. Live means unexpired requests, not users currently online.`;
+  document.querySelector("#runtime-selected-schema").textContent = (snapshot?.schema?.[query.collection] || [...new Set(selected.fields.map(([, key]) => key))]).join(", ");
   if (!records.length) {
     const row = document.createElement("tr");
-    const cell = document.createElement("td");
-    cell.colSpan = values.length;
-    cell.textContent = "No activity observed in this server run.";
-    row.append(cell); target.append(row);
-    return;
+    const cell = document.createElement("td"); cell.colSpan = selected.fields.length;
+    cell.textContent = snapshot ? "No current runtime records match these filters. Try another table, username or date range." : "Live data is not connected. Use Load / search or Refresh now; connection details appear above.";
+    row.append(cell); body.append(row);
   }
   for (const record of records) {
     const row = document.createElement("tr");
-    for (const value of values) { const cell = document.createElement("td"); cell.textContent = String(value(record) ?? ""); row.append(cell); }
-    target.append(row);
+    for (const [, key, format] of selected.fields) {
+      const cell = document.createElement("td");
+      cell.textContent = String(typeof format === "function" ? format(record) : format === "date" ? date(record[key]) : format === "countdown" ? remaining(record[key]) : record[key] ?? "—");
+      if (format === "countdown") { cell.dataset.countdown = key; countdowns.push({ cell, expiresAt: record[key] }); }
+      row.append(cell);
+    }
+    body.append(row);
   }
+  const result = snapshot?.result;
+  document.querySelector("#runtime-result").textContent = result ? `${result.total.toLocaleString()} matching records · Showing ${records.length ? result.offset + 1 : 0}–${result.offset + records.length} · Global counters are not filtered` : "No data loaded. Choose a table and use Load / search.";
+  document.querySelector("#runtime-previous").disabled = !result || result.offset === 0;
+  document.querySelector("#runtime-next").disabled = !result?.hasMore;
 }
 
-function clear(message = "Display cleared and automatic refresh paused. Refresh to reconnect.") {
-  generation++;
-  active = false;
+function reset(message) {
+  generation++; active = false;
   pending?.abort(); pending = null;
-  workspace.hidden = true; refreshButton.disabled = false;
-  document.querySelectorAll("[data-runtime-total]").forEach((element) => { element.textContent = "0"; });
-  for (const selector of ["#runtime-users", "#runtime-sellers", "#runtime-buyers"]) document.querySelector(selector).replaceChildren();
-  status.textContent = message;
+  snapshot = null; countdowns = [];
+  refreshButton.disabled = false;
+  workspace.setAttribute("aria-busy", "false");
+  document.querySelectorAll("[data-runtime-total]").forEach((element) => { element.textContent = "—"; });
+  document.querySelector("#runtime-timestamp").textContent = "No verified server snapshot. Dashes mean unavailable, not zero users.";
+  render(); state("paused", message);
 }
 
 async function refresh() {
@@ -39,31 +88,67 @@ async function refresh() {
   const current = generation;
   const controller = new AbortController();
   pending = controller; refreshButton.disabled = true;
+  workspace.setAttribute("aria-busy", "true");
+  state("loading", "Requesting live runtime data from this private URL…");
   const timeout = setTimeout(() => controller.abort(), 15000);
   try {
-    const response = await fetch("/api/quick-sale/runtime", { cache: "no-store", credentials: "same-origin", signal: controller.signal });
-    const data = await response.json();
+    const response = await fetch(`/api/quick-sale/runtime?${new URLSearchParams(query)}`, { cache: "no-store", credentials: "same-origin", signal: controller.signal });
+    let data;
+    try { data = await response.json(); }
+    catch { throw new Error(`HTTP ${response.status}: this URL did not return runtime JSON. Run the private viewer service here; a static HTML upload alone cannot supply its API.`); }
     if (current !== generation) return;
-    if (!response.ok) throw new Error(data.message || "Runtime activity is unavailable.");
-    if (data.scope !== "quick-sale-runtime" || data.storage !== "server-memory") throw new Error("The server did not return a Quick Sale runtime snapshot.");
+    if (response.status === 404) throw new Error("HTTP 404: /api/quick-sale/runtime is missing at this viewer URL. Run or route the private viewer service here; uploading HTML alone is not enough.");
+    if (!response.ok) throw new Error(`HTTP ${response.status}: ${data.message || "Runtime data is unavailable."}`);
+    if (data.scope !== "quick-sale-runtime" || data.storage !== "server-memory") throw new Error("This URL is not connected to the Quick Sale runtime API.");
+    if (data.version !== 2 || data.result?.collection !== query.collection || !Array.isArray(data.rows?.[query.collection]) || !Number.isFinite(Date.parse(data.asOf))) throw new Error("The backend needs the searchable runtime dashboard update. Deploy the updated runtime monitor and API before retrying.");
+    snapshot = data; receivedAt = Date.now();
     document.querySelectorAll("[data-runtime-total]").forEach((element) => { element.textContent = Number(data.totals[element.dataset.runtimeTotal] || 0).toLocaleString(); });
-    table("#runtime-users", data.rows.users, [(record) => record.username, (record) => date(record.createdAt), (record) => date(record.lastSeenAt), (record) => date(record.expiresAt)]);
-    table("#runtime-sellers", data.rows.sellerPosts, [(record) => record.id, (record) => record.username, (record) => [record.vehicle.year, record.vehicle.make, record.vehicle.model].filter(Boolean).join(" "), (record) => record.zip, (record) => record.status, (record) => date(record.expiresAt)]);
-    table("#runtime-buyers", data.rows.buyerRequests, [(record) => record.username, (record) => record.make, (record) => record.model, (record) => record.zip, (record) => `${record.radiusMiles ?? ""} miles`, (record) => date(record.updatedAt), (record) => date(record.expiresAt)]);
-    document.querySelector("#runtime-timestamp").textContent = `Server started ${date(data.startedAt)} · Snapshot ${date(data.asOf)} · Counts reset on restart`;
-    document.querySelector("#runtime-limit").textContent = `Tables show the latest ${data.rowLimit} records. Runtime monitoring holds up to ${Number(data.capacity).toLocaleString()} records per collection; it observes application activity and does not load database history.`;
-    workspace.hidden = false;
-    status.textContent = "Connected through the private viewer service. No membership or subscription data is included.";
+    document.querySelector("#runtime-timestamp").textContent = `Backend started ${date(data.startedAt)} · Verified snapshot ${date(data.asOf)} · Counts reset on backend restart`;
+    document.querySelector("#runtime-limit").textContent = `Up to ${data.rowLimit} rows per page. Search covers up to ${Number(data.capacity).toLocaleString()} observed records per runtime collection; no database query is made.`;
+    render();
+    state("connected", "Live runtime snapshot loaded. Select a table or search for a username, ZIP, vehicle, request ID or match ID.");
   } catch (error) {
-    if (current === generation) clear(error.name === "AbortError" ? "The runtime request timed out. Refresh to retry." : `Refresh failed: ${error.message}`);
+    if (current === generation) {
+      active = false;
+      state("error", `${error.name === "AbortError" ? "The runtime service timed out. Refresh to retry." : error.message}${snapshot ? ` Showing the last verified snapshot from ${date(snapshot.asOf)}; it is not a new live response.` : " No live records have been loaded."}`);
+      render();
+    }
   } finally {
     clearTimeout(timeout);
-    if (current === generation) { pending = null; refreshButton.disabled = false; }
+    if (current === generation) { pending = null; refreshButton.disabled = false; workspace.setAttribute("aria-busy", "false"); }
   }
 }
 
-document.querySelector("#runtime-clear").addEventListener("click", () => clear());
+function search() {
+  reset("Preparing runtime search…");
+  try {
+    const values = form.elements;
+    const from = values.from.value ? new Date(values.from.value).toISOString() : "";
+    const to = values.to.value ? new Date(values.to.value).toISOString() : "";
+    if (from && to && from > to) throw new Error("The From date/time must be before the Through date/time.");
+    query = { collection: values.collection.value, q: values.q.value.trim(), from, to, live: String(values.live.checked), offset: 0, limit: 100 };
+    render(); active = true; refresh();
+  } catch (error) { state("error", `Check your search dates: ${error.message}`); }
+}
+
+form.addEventListener("submit", (event) => { event.preventDefault(); search(); });
+form.elements.collection.addEventListener("change", search);
+document.querySelector("#runtime-reset").addEventListener("click", () => { form.reset(); search(); });
+document.querySelector("#runtime-clear").addEventListener("click", () => reset("Display cleared and automatic requests paused. Refresh or search to reconnect."));
 refreshButton.addEventListener("click", () => { active = true; refresh(); });
+for (const [selector, direction] of [["#runtime-previous", -1], ["#runtime-next", 1]]) document.querySelector(selector).addEventListener("click", () => {
+  const offset = Math.max(0, query.offset + direction * query.limit);
+  reset("Loading another page…"); query.offset = offset; active = true; refresh();
+});
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") refresh(); });
-setInterval(() => { if (document.visibilityState === "visible" && document.querySelector("#runtime-auto").checked) refresh(); }, 20000);
-refresh();
+setInterval(() => { if (document.visibilityState === "visible" && document.querySelector("#runtime-auto").checked && !form.contains(document.activeElement)) refresh(); }, 20000);
+setInterval(() => {
+  document.querySelector("#runtime-clock").textContent = `Your current time: ${new Date().toLocaleString()}`;
+  if (snapshot) {
+    const records = snapshot.rows[query.collection];
+    const current = records.filter((record) => !record.expiresAt || Date.parse(record.expiresAt) > serverTime());
+    if (current.length !== records.length) { snapshot.rows[query.collection] = current; render(); }
+  }
+  for (const { cell, expiresAt } of countdowns) cell.textContent = remaining(expiresAt);
+}, 1000);
+render(); refresh();

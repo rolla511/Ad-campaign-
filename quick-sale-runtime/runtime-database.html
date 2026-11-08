@@ -2,37 +2,54 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex, nofollow"><title>Quick Sale | Runtime viewer</title>
-  <link rel="stylesheet" href="/quick-sale.css"><link rel="stylesheet" href="./runtime-database.css">
+  <meta name="robots" content="noindex, nofollow"><title>Quick Sale | Live runtime dashboard</title>
+  <link rel="stylesheet" href="./runtime-database.css">
 </head>
 <body>
-  <header class="qs-header"><div class="qs-brand">Quick Sale<span>Private runtime activity viewer</span></div><p>Visits, Quick Users and temporary matching activity</p></header>
-  <main class="qs-layout">
-    <section class="qs-panel">
-      <p class="qs-eyebrow">Private · Read only · Server memory</p><h1>Quick Sale runtime database</h1>
-      <p>View anonymous page visits and temporary Quick User activity observed by this server. Membership, subscription and payment records are excluded.</p>
-      <p>Counts reset when the server restarts. This viewer does not query PostgreSQL or show an all-time customer total. Contact details, conversation text and access codes are never included in its data.</p>
-      <p class="qs-muted">This separate private viewer connects automatically. The backend URL and any backend credential are configured on the viewer server, never in this HTML, its URL or browser requests. Keep this viewer behind private hosting or VPN access; an unlisted public URL is not private.</p>
-      <div class="qs-row"><button id="runtime-refresh" type="button">Refresh now</button><button id="runtime-clear" class="qs-secondary" type="button">Clear display</button><label class="qs-check"><input id="runtime-auto" type="checkbox" checked> Refresh every 20 seconds</label></div>
-      <output id="runtime-status" aria-live="polite">Connecting to the private runtime service...</output>
+  <header class="runtime-header"><div class="runtime-brand">Quick Sale<span>Private runtime dashboard</span></div><span id="runtime-connection" class="runtime-connection" data-state="disconnected">Not connected</span></header>
+  <main>
+    <section class="runtime-panel">
+      <div class="runtime-toolbar"><div><p class="runtime-eyebrow">Read-only · Temporary matching activity</p><h1>Live users, requests &amp; matches</h1></div><div class="runtime-actions"><button id="runtime-refresh" type="button">Refresh now</button><button id="runtime-clear" class="secondary" type="button">Clear display</button></div></div>
+      <div class="runtime-toolbar"><p id="runtime-clock">Current time appears when the dashboard script loads.</p><label class="runtime-check"><input id="runtime-auto" type="checkbox" checked> Auto-refresh every 20 seconds</label></div>
+      <output id="runtime-status" role="status" aria-live="polite">No live data loaded yet. If the controls do not respond, upload runtime-database.js and runtime-database.css beside this HTML. This URL must also run the private viewer service; HTML on its own cannot access the protected backend.</output>
+      <noscript><p class="runtime-error">JavaScript is disabled. Enable it to search and load live runtime data. The table and field reference remain visible below.</p></noscript>
+      <p id="runtime-timestamp" class="muted">No verified server snapshot. Dashes mean unavailable, not zero users.</p>
     </section>
-    <section id="runtime-workspace" hidden>
-      <section class="qs-panel">
-        <h2>Current runtime activity</h2>
-        <p id="runtime-timestamp" class="qs-muted"></p>
-        <div class="runtime-metrics">
-          <article><h3>Page visits this server run</h3><p data-runtime-total="visits">0</p><span>Quick Sale entry-page views, not unique people</span></article>
-          <article><h3>Quick Users observed</h3><p data-runtime-total="users">0</p><span>Unexpired temporary users in this process</span></article>
-          <article><h3>Seller posts</h3><p data-runtime-total="sellerPosts">0</p><span>Posted, reserved or completed vehicles</span></article>
-          <article><h3>Buyer requests</h3><p data-runtime-total="buyerRequests">0</p><span>Current saved buying criteria</span></article>
-          <article><h3>Matched leads</h3><p data-runtime-total="matchedLeads">0</p><span>Delivered matches involving a Quick User</span></article>
-          <article><h3>Private drafts</h3><p data-runtime-total="drafts">0</p><span>Awaiting publication; excluded from seller posts</span></article>
-        </div>
+    <section id="runtime-workspace" aria-label="Runtime dashboard">
+      <section class="runtime-metrics" aria-label="Current runtime counts">
+        <article><h2>Runtime users</h2><p data-runtime-total="users">—</p><span>Unexpired Quick Users observed by this server</span></article>
+        <article><h2>Live seller requests</h2><p data-runtime-total="liveSellerRequests">—</p><span>Open or reserved vehicles; no private drafts</span></article>
+        <article><h2>Live buyer requests</h2><p data-runtime-total="liveBuyerRequests">—</p><span>Current saved buying criteria</span></article>
+        <article><h2>Matches made</h2><p data-runtime-total="matchedLeads">—</p><span>Delivered matches still in runtime retention</span></article>
+        <article><h2>Page visits</h2><p data-runtime-total="visits">—</p><span>Entry-page views since backend startup</span></article>
+        <article><h2>Seller posts</h2><p data-runtime-total="sellerPosts">—</p><span>Open, reserved and completed vehicles</span></article>
+        <article><h2>Buyer requests</h2><p data-runtime-total="buyerRequests">—</p><span>One current request per Quick User</span></article>
+        <article><h2>Private drafts</h2><p data-runtime-total="drafts">—</p><span>Not yet published; not live seller requests</span></article>
       </section>
-      <section class="qs-panel"><h2>Quick Users</h2><div class="runtime-table"><table><thead><tr><th>Username</th><th>Created</th><th>Last observed</th><th>Expiry</th></tr></thead><tbody id="runtime-users"></tbody></table></div></section>
-      <section class="qs-panel"><h2>Seller activity</h2><div class="runtime-table"><table><thead><tr><th>Listing</th><th>Username</th><th>Vehicle</th><th>ZIP</th><th>Status</th><th>Expiry</th></tr></thead><tbody id="runtime-sellers"></tbody></table></div></section>
-      <section class="qs-panel"><h2>Buyer requests</h2><div class="runtime-table"><table><thead><tr><th>Username</th><th>Make</th><th>Model</th><th>ZIP</th><th>Radius</th><th>Updated</th><th>Expiry</th></tr></thead><tbody id="runtime-buyers"></tbody></table></div></section>
-      <p id="runtime-limit" class="qs-muted"></p>
+      <section class="runtime-panel">
+        <h2>Find runtime information</h2>
+        <form id="runtime-query" class="runtime-filters">
+          <label>Table<select name="collection" id="runtime-collection"><option value="users">Quick Users</option><option value="sellerPosts">Seller requests</option><option value="buyerRequests">Buyer requests</option><option value="matches">Matches made</option></select></label>
+          <label class="runtime-search">Search username, request, vehicle, ZIP or match<input name="q" type="search" maxlength="120" placeholder="For example: jason1, Ford, 10001 or a listing ID" autocomplete="off"></label>
+          <label>From date / time<input name="from" type="datetime-local"></label><label>Through date / time<input name="to" type="datetime-local"></label>
+          <label class="runtime-check"><input name="live" type="checkbox"> Live requests / active matches only</label>
+          <div class="runtime-actions"><button type="submit">Load / search</button><button id="runtime-reset" class="secondary" type="button">Reset filters</button></div>
+        </form>
+        <p id="runtime-date-hint" class="muted">Date filters use user creation time. Enter dates in your local timezone.</p>
+        <div class="runtime-toolbar"><h2 id="runtime-collection-title">Quick Users</h2><p id="runtime-result" class="muted">No data loaded. Choose a table and use Load / search.</p></div>
+        <div class="runtime-table"><table><caption id="runtime-caption">Quick Users · Current runtime records</caption><thead><tr id="runtime-columns"><th scope="col">Username</th><th scope="col">User ID</th><th scope="col">Created at</th><th scope="col">Last observed</th><th scope="col">Buyer leads</th><th scope="col">Seller leads</th><th scope="col">Buyer deadline</th><th scope="col">Seller deadline</th><th scope="col">Erases at</th><th scope="col">Time left</th></tr></thead><tbody id="runtime-records"><tr><td colspan="10">Live data is not connected. The table stays visible while you connect or troubleshoot.</td></tr></tbody></table></div>
+        <div class="runtime-toolbar runtime-pagination"><button id="runtime-previous" class="secondary" type="button" disabled>Previous 100</button><p id="runtime-limit" class="muted">Search covers the server's runtime collection, not just the first displayed page.</p><button id="runtime-next" class="secondary" type="button" disabled>Next 100</button></div>
+      </section>
+      <section class="runtime-panel">
+        <details open><summary>Runtime tables and fields (schema)</summary><p class="muted">Read-only runtime projections, not PostgreSQL tables. No SQL or personal-contact records are exposed.</p><div class="runtime-schema">
+          <article><h3>Quick Users</h3><p>User ID, username, creation / last-observed time, observed buyer / seller lead counts, role deadlines, erase time and seconds remaining.</p></article>
+          <article><h3>Seller requests</h3><p>Listing ID, username, vehicle, ZIP, status, posted time, erase time and seconds remaining.</p></article>
+          <article><h3>Buyer requests</h3><p>Request ID, username, make / model, ZIP, radius, saved / updated time, erase time and seconds remaining.</p></article>
+          <article><h3>Matches made</h3><p>Match ID, listing ID, Quick User buyer / seller aliases, status, delivered time, response deadline and erase time.</p></article>
+        </div><p class="muted">Fields for the selected table:</p><code id="runtime-selected-schema">id, username, createdAt, lastSeenAt, buyerLeads, sellerLeads, buyerExpiresAt, sellerExpiresAt, expiresAt, remainingSeconds</code></details>
+        <details id="runtime-help"><summary>Connection help</summary><ol><li>Keep runtime-database.html, runtime-database.js and runtime-database.css together.</li><li>Run the separate private Node viewer service at this URL using <code>npm run runtime:viewer</code>. A static-only host does not provide its API.</li><li>Configure the backend URL and matching backend credential on the viewer server, never in this HTML or browser.</li><li><a href="/api/quick-sale/runtime" target="_blank" rel="noopener">Check this private URL's runtime data service</a>. It must return runtime JSON, not a static HTML page or a 404.</li></ol></details>
+        <details><summary>Runtime scope and retention rules</summary><p>Counts reset on backend restart and cover this instance's observed, unexpired Quick User activity, not all database users or currently online people. The ordinary application can observe retained users when they return; this viewer does not query PostgreSQL. Memberships, subscriptions, payments, contact details, conversations and credentials are excluded.</p><p>Free activity lasts at most three days. After the fifth free buyer or seller lead, the response window ends after 24 hours or at the original deadline, whichever comes first. Search and refresh never extend retention. Displayed lead counts are observed matches, not a replacement for the application's authoritative quota checks.</p><p>This token-free viewer requires private hosting, a VPN or another access restriction. An unlisted public URL is not private.</p></details>
+      </section>
     </section>
   </main><script type="module" src="./runtime-database.js"></script>
 </body>
