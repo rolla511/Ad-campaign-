@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow"><meta name="referrer" content="no-referrer">
+  <title>Quick Sale | Subscriber payment records</title>
+  <link rel="stylesheet" href="./runtime-database.css">
+</head>
+<body>
+  <header class="runtime-header"><div class="runtime-brand">Quick Sale<span>Owner subscriber &amp; payment records</span></div><a href="./runtime-database.html">Runtime dashboard</a></header>
+  <main>
+    <section class="runtime-panel">
+      <p class="runtime-eyebrow">Owner access · Read-only PostgreSQL report</p><h1>Identify subscribers and reconcile payments</h1>
+      <p>This page calls the Render backend, which reads its own PostgreSQL database. It does not connect your browser to PostgreSQL, create subscriptions, capture payments or change priority access.</p>
+      <p>Sandbox subscribers are tests, not paying Live customers. An account, subscription ID or ACTIVE status alone is not proof of payment. Missing historical payment evidence stays unverified.</p>
+      <form id="subscriber-auth" class="runtime-filters">
+        <label>Owner access token<input name="token" type="password" autocomplete="off" required></label>
+        <details><summary>Existing trusted-admin settings</summary><label>Trusted-device token, only if already required by your backend<input name="device" type="password" autocomplete="off"></label><p class="muted">This does not request device location or register a device.</p></details>
+        <div class="runtime-actions"><button type="submit">Connect to owner records</button><button id="subscriber-forget" type="button" class="secondary">Forget access / clear display</button></div>
+      </form>
+      <output id="subscriber-status" role="status" aria-live="polite">Not connected. Use your platform admin token or an authorized primary-buyer session token, not a subscriber password or PostgreSQL URL. Access is kept only in this page's memory.</output>
+      <p id="subscriber-snapshot" class="muted">No database records loaded.</p>
+      <noscript><p>Enable JavaScript to connect and search. The table remains visible without a connection.</p></noscript>
+    </section>
+    <section class="runtime-metrics" aria-label="Matching database accounts">
+      <article><h2>Matching accounts</h2><p data-subscriber-total="matching">—</p><span>All matching stored subscriber / checkout profiles</span></article>
+      <article><h2>Live environment</h2><p data-subscriber-total="live">—</p><span>Live records, not automatically paid accounts</span></article>
+      <article><h2>Sandbox environment</h2><p data-subscriber-total="sandbox">—</p><span>Test subscriptions; no real money</span></article>
+      <article><h2>Unrecorded environment</h2><p data-subscriber-total="unknown">—</p><span>Legacy or incomplete records requiring review</span></article>
+    </section>
+    <section class="runtime-panel">
+      <h2>Search stored subscribers</h2>
+      <form id="subscriber-query" class="runtime-filters">
+        <label class="runtime-search">Username, name, account ID, subscription ID or payer ID<input name="q" type="search" maxlength="120" autocomplete="off"></label>
+        <label>Stored payment environment<select name="mode"><option value="all">All environments</option><option value="live">Live</option><option value="sandbox">Sandbox tests</option><option value="unknown">Unrecorded / unknown</option></select></label>
+        <div class="runtime-actions"><button type="submit">Load / search</button><button id="subscriber-refresh" type="button" class="secondary">Refresh database records</button></div>
+      </form>
+      <p class="muted">Lead/request counts refer to records currently retained in PostgreSQL, not all-time totals or a second runtime cache. Expired or missing profiles can still have payment reconciliation records.</p>
+      <div class="runtime-table"><table><caption>Subscriber identity, payment evidence and stored lead counts</caption><thead><tr id="subscriber-columns"><th>Username</th><th>Account ID</th><th>Name</th><th>Environment</th><th>PayPal subscription ID</th><th>Subscription status</th><th>Payment evidence</th><th>Priority subscription eligibility</th><th>Last payment</th><th>Payment time</th><th>Last verified</th><th>Paid through</th><th>PayPal transaction ID</th><th>Completed Live receipt</th><th>Intended merchant receipt</th><th>Merchant ID</th><th>PayPal payer ID</th><th>Plan ID</th><th>Seller requests</th><th>Buyer requests</th><th>Seller leads</th><th>Buyer leads</th><th>Profile state</th><th>Profile clears at</th></tr></thead><tbody id="subscriber-records"><tr><td colspan="24">Connect with owner access to load actual database records.</td></tr></tbody></table></div>
+      <div class="runtime-toolbar runtime-pagination"><button id="subscriber-previous" type="button" class="secondary" disabled>Previous 100</button><p id="subscriber-result" class="muted">No database query has been made.</p><button id="subscriber-next" type="button" class="secondary" disabled>Next 100</button></div>
+    </section>
+    <section class="runtime-panel"><h2>What this confirms</h2><p>A verified Live subscription payment and a verified completed transaction receipt are shown separately. Intended-merchant receipt is confirmed only when a verified Live transaction records a payee ID matching the configured platform merchant. Missing receipts or merchant IDs are not assumed to be successful payments. These fields do not certify an available PayPal balance, bank deposit or payout.</p><p>The report does not contact PayPal or refresh subscriptions. It reads evidence already stored by normal backend verification and signature-verified webhooks. Historical records may need reconciliation before they can show confirmed receipt.</p><p>Passwords, password hashes, session tokens, recovery codes, payment credentials, conversations and contact details are not returned. Never publish or embed an owner token in frontend files. A separate frontend URL alone does not protect subscriber/payment data.</p></section>
+  </main>
+  <script type="module" src="./subscriber-database.js"></script>
+</body>
+</html>
