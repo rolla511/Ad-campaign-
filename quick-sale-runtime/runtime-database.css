@@ -1,0 +1,13 @@
+h1 { margin: 0 0 16px; font-size: clamp(28px, 5vw, 42px); }
+#runtime-workspace:not([hidden]) { display: grid; gap: 22px; }
+.runtime-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+.runtime-metrics article { padding: 18px; border: 1px solid var(--line); border-radius: 8px; }
+.runtime-metrics h3 { margin: 0; font-size: 14px; }
+.runtime-metrics p { margin: 8px 0; color: var(--accent); font-size: 36px; font-weight: 800; }
+.runtime-metrics span { display: block; font-size: 12px; color: var(--muted); }
+.runtime-table { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; min-width: 90px; }
+th { background: #f5f3ed; }
+@media (max-width: 700px) { .runtime-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .runtime-metrics { grid-template-columns: 1fr; } }

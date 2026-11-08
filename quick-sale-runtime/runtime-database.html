@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow"><title>Quick Sale | Runtime viewer</title>
+  <link rel="stylesheet" href="/quick-sale.css"><link rel="stylesheet" href="./runtime-database.css">
+</head>
+<body>
+  <header class="qs-header"><div class="qs-brand">Quick Sale<span>Private runtime activity viewer</span></div><p>Visits, Quick Users and temporary matching activity</p></header>
+  <main class="qs-layout">
+    <section class="qs-panel">
+      <p class="qs-eyebrow">Private · Read only · Server memory</p><h1>Quick Sale runtime database</h1>
+      <p>View anonymous page visits and temporary Quick User activity observed by this server. Membership, subscription and payment records are excluded.</p>
+      <p>Counts reset when the server restarts. This viewer does not query PostgreSQL or show an all-time customer total. Contact details, conversation text and access codes are never included in its data.</p>
+      <p class="qs-muted">This separate private viewer connects automatically. The backend URL and any backend credential are configured on the viewer server, never in this HTML, its URL or browser requests. Keep this viewer behind private hosting or VPN access; an unlisted public URL is not private.</p>
+      <div class="qs-row"><button id="runtime-refresh" type="button">Refresh now</button><button id="runtime-clear" class="qs-secondary" type="button">Clear display</button><label class="qs-check"><input id="runtime-auto" type="checkbox" checked> Refresh every 20 seconds</label></div>
+      <output id="runtime-status" aria-live="polite">Connecting to the private runtime service...</output>
+    </section>
+    <section id="runtime-workspace" hidden>
+      <section class="qs-panel">
+        <h2>Current runtime activity</h2>
+        <p id="runtime-timestamp" class="qs-muted"></p>
+        <div class="runtime-metrics">
+          <article><h3>Page visits this server run</h3><p data-runtime-total="visits">0</p><span>Quick Sale entry-page views, not unique people</span></article>
+          <article><h3>Quick Users observed</h3><p data-runtime-total="users">0</p><span>Unexpired temporary users in this process</span></article>
+          <article><h3>Seller posts</h3><p data-runtime-total="sellerPosts">0</p><span>Posted, reserved or completed vehicles</span></article>
+          <article><h3>Buyer requests</h3><p data-runtime-total="buyerRequests">0</p><span>Current saved buying criteria</span></article>
+          <article><h3>Matched leads</h3><p data-runtime-total="matchedLeads">0</p><span>Delivered matches involving a Quick User</span></article>
+          <article><h3>Private drafts</h3><p data-runtime-total="drafts">0</p><span>Awaiting publication; excluded from seller posts</span></article>
+        </div>
+      </section>
+      <section class="qs-panel"><h2>Quick Users</h2><div class="runtime-table"><table><thead><tr><th>Username</th><th>Created</th><th>Last observed</th><th>Expiry</th></tr></thead><tbody id="runtime-users"></tbody></table></div></section>
+      <section class="qs-panel"><h2>Seller activity</h2><div class="runtime-table"><table><thead><tr><th>Listing</th><th>Username</th><th>Vehicle</th><th>ZIP</th><th>Status</th><th>Expiry</th></tr></thead><tbody id="runtime-sellers"></tbody></table></div></section>
+      <section class="qs-panel"><h2>Buyer requests</h2><div class="runtime-table"><table><thead><tr><th>Username</th><th>Make</th><th>Model</th><th>ZIP</th><th>Radius</th><th>Updated</th><th>Expiry</th></tr></thead><tbody id="runtime-buyers"></tbody></table></div></section>
+      <p id="runtime-limit" class="qs-muted"></p>
+    </section>
+  </main><script type="module" src="./runtime-database.js"></script>
+</body>
+</html>
