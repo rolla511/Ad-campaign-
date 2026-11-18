@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up — Party Booster</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="logo">🎉 Party Booster</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="events.html">Events</a></li>
+        <li><a href="promoters.html">Promoters</a></li>
+        <li id="authLinks">
+          <a href="login.html" class="btn btn-outline">Login</a>
+          <a href="register.html" class="btn btn-primary">Sign Up</a>
+        </li>
+        <li id="userLinks" style="display:none;">
+          <a href="create-event.html" class="btn btn-primary">Create Event</a>
+          <a href="dashboard.html">Dashboard</a>
+          <a href="#" id="logoutBtn">Logout</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="form-container">
+    <h2>Create Your Account</h2>
+    <div id="message"></div>
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required>
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" minlength="6" required>
+      </div>
+      <div class="form-group">
+        <label for="fullName">Full Name</label>
+        <input type="text" id="fullName" name="fullName">
+      </div>
+      <div class="form-group">
+        <label for="role">I am a...</label>
+        <select id="role" name="role">
+          <option value="organizer">Event Organizer</option>
+          <option value="promoter">Promoter / Content Creator</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;">Create Account</button>
+    </form>
+    <p style="text-align:center; margin-top:20px; color:var(--gray);">
+      Already have an account? <a href="login.html" style="color:var(--primary);">Login</a>
+    </p>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const messageDiv = document.getElementById('message');
+      messageDiv.innerHTML = '';
+
+      const body = {
+        username: document.getElementById('username').value,
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+        fullName: document.getElementById('fullName').value,
+        role: document.getElementById('role').value
+      };
+
+      try {
+        const data = await Auth.api('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify(body)
+        });
+        Auth.setToken(data.token);
+        showSuccess('Account created! Redirecting...', messageDiv);
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 1000);
+      } catch (err) {
+        showError(err.message, messageDiv);
+      }
+    });
+  </script>
+</body>
+</html>
