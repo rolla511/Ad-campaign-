@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join Party Booster — Create Your Profile</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .form-container { max-width: 600px; }
+    .form-section { margin-bottom: 24px; }
+    .form-section h3 { font-size: 16px; color: var(--primary); margin-bottom: 12px; border-bottom: 2px solid var(--primary); padding-bottom: 4px; }
+    .profile-type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .profile-type-option { display: none; }
+    .profile-type-label { display: block; padding: 10px 8px; text-align: center; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+    .profile-type-option:checked + .profile-type-label { border-color: var(--primary); background: var(--primary); color: white; }
+    .profile-type-label:hover { border-color: var(--primary); }
+    .required::after { content: " *"; color: var(--danger); }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="logo">🎉 Party Booster</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="events.html">Events</a></li>
+        <li><a href="promoters.html">Promoters</a></li>
+        <li id="authLinks">
+          <a href="login.html" class="btn btn-outline">Login</a>
+          <a href="register.html" class="btn btn-primary">Sign Up</a>
+        </li>
+        <li id="userLinks" style="display:none;">
+          <a href="create-event.html" class="btn btn-primary">Create Event</a>
+          <a href="dashboard.html">Dashboard</a>
+          <a href="#" id="logoutBtn">Logout</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="form-container">
+    <h2>Join Party Booster</h2>
+    <p style="color:var(--gray); margin-bottom:20px;">Create your profile to coordinate events or boost others' events in your area.</p>
+    <div id="message"></div>
+    <form id="registerForm">
+
+      <!-- Core Credentials -->
+      <div class="form-section">
+        <h3>🔐 Account</h3>
+        <div class="form-group">
+          <label for="username" class="required">Username</label>
+          <input type="text" id="username" name="username" required minlength="3" maxlength="30" placeholder="your_username">
+        </div>
+        <div class="form-group">
+          <label for="email" class="required">Email</label>
+          <input type="email" id="email" name="email" required placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label for="password" class="required">Password</label>
+          <input type="password" id="password" name="password" required minlength="8" placeholder="Min 8 chars, uppercase + lowercase + number">
+        </div>
+      </div>
+
+      <!-- Profile Info -->
+      <div class="form-section">
+        <h3>👤 Your Profile</h3>
+        <div class="form-group">
+          <label for="fullName" class="required">Full Name</label>
+          <input type="text" id="fullName" name="fullName" required maxlength="100" placeholder="Your real name">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dateOfBirth">Date of Birth</label>
+            <input type="date" id="dateOfBirth" name="dateOfBirth">
+          </div>
+          <div class="form-group">
+            <label for="profileType" class="required">What are you?</label>
+            <select id="profileType" name="profileType" required>
+              <option value="">Select your role...</option>
+              <option value="artist">🎨 Artist</option>
+              <option value="comedian">😂 Comedian</option>
+              <option value="promoter">📣 Promoter</option>
+              <option value="streamer">🎮 Streamer</option>
+              <option value="content_creator">📱 Content Creator</option>
+              <option value="dancer">💃 Dancer</option>
+              <option value="security">🛡️ Security</option>
+              <option value="actor">🎭 Actor</option>
+              <option value="choreographer">🩰 Choreographer</option>
+              <option value="producer">🎬 Producer</option>
+              <option value="venue_owner">🏢 Venue Owner</option>
+              <option value="booking_agent">📋 Booking Agent</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="socialMediaHandle">Social Media Handle or Searchable Name</label>
+          <input type="text" id="socialMediaHandle" name="socialMediaHandle" maxlength="255" placeholder="@yourhandle or Your Stage Name">
+        </div>
+      </div>
+
+      <!-- Contact Info -->
+      <div class="form-section">
+        <h3>📞 Contact Info</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" name="phone" placeholder="+1 (555) 123-4567">
+          </div>
+          <div class="form-group">
+            <label for="whatsapp">WhatsApp</label>
+            <input type="tel" id="whatsapp" name="whatsapp" placeholder="+1 (555) 123-4567">
+          </div>
+        </div>
+      </div>
+
+      <!-- Location -->
+      <div class="form-section">
+        <h3>📍 Location</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="city">City</label>
+            <input type="text" id="city" name="city" maxlength="100" placeholder="Los Angeles">
+          </div>
+          <div class="form-group">
+            <label for="state">State</label>
+            <input type="text" id="state" name="state" maxlength="100" placeholder="California">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="country">Country</label>
+            <input type="text" id="country" name="country" maxlength="100" placeholder="United States" value="US">
+          </div>
+          <div class="form-group">
+            <label for="postalCode">Postal Code</label>
+            <input type="text" id="postalCode" name="postalCode" maxlength="20" placeholder="90001">
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;">Create My Party Booster Profile</button>
+    </form>
+    <p style="text-align:center; margin-top:20px; color:var(--gray);">
+      Already have an account? <a href="login.html" style="color:var(--primary);">Login</a>
+    </p>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const messageDiv = document.getElementById('message');
+      messageDiv.innerHTML = '';
+
+      const body = {
+        // Core credentials
+        username: document.getElementById('username').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value,
+        // Profile info
+        fullName: document.getElementById('fullName').value.trim(),
+        dateOfBirth: document.getElementById('dateOfBirth').value || undefined,
+        profileType: document.getElementById('profileType').value,
+        socialMediaHandle: document.getElementById('socialMediaHandle').value.trim() || undefined,
+        // Contact info
+        phone: document.getElementById('phone').value.trim() || undefined,
+        whatsapp: document.getElementById('whatsapp').value.trim() || undefined,
+        // Location
+        city: document.getElementById('city').value.trim() || undefined,
+        state: document.getElementById('state').value.trim() || undefined,
+        country: document.getElementById('country').value.trim() || 'US',
+        postalCode: document.getElementById('postalCode').value.trim() || undefined
+      };
+
+      try {
+        const data = await Auth.api('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify(body)
+        });
+        Auth.setToken(data.token);
+        showSuccess('Welcome to Party Booster! Your profile is ready. Redirecting...', messageDiv);
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 1500);
+      } catch (err) {
+        showError(err.message, messageDiv);
+      }
+    });
+  </script>
+</body>
+</html>
