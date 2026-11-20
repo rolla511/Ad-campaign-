@@ -1,0 +1,10 @@
+{
+  "name": "party-booster-frontend",
+  "version": "1.0.0",
+  "description": "Party Booster static frontend - HTML/CSS/JS",
+  "private": true,
+  "scripts": {
+    "start": "echo 'Static site - no build needed'",
+    "build": "echo 'Static site - no build needed'"
+  }
+}
