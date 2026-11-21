@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Details — Party Booster</title>
+  <link rel="stylesheet" href="css/style.css?v=2">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="logo">🎉 Party Booster</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="events.html">Events</a></li>
+        <li><a href="promoters.html">Promoters</a></li>
+        <li id="authLinks">
+          <a href="login.html" class="btn btn-outline">Login</a>
+          <a href="register.html" class="btn btn-primary">Sign Up</a>
+        </li>
+        <li id="userLinks" style="display:none;">
+          <a href="create-event.html" class="btn btn-primary">Create Event</a>
+          <a href="dashboard.html">Dashboard</a>
+          <a href="#" id="logoutBtn">Logout</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container" style="padding: 40px 20px;" id="eventContainer">
+    <div class="loading">Loading event details</div>
+  </div>
+
+  <script src="js/app.js?v=2"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const eventId = params.get('id');
+
+    if (!eventId) {
+      document.getElementById('eventContainer').innerHTML = '<p style="text-align:center; color:var(--danger);">Invalid event ID.</p>';
+    } else {
+      loadEvent(eventId);
+    }
+
+    async function loadEvent(id) {
+      const container = document.getElementById('eventContainer');
+      container.innerHTML = '<div class="loading">Loading event details</div>';
+
+      try {
+        const data = await Auth.api(`/events/${id}`);
+        renderEvent(data.event, data.matches || []);
+      } catch (err) {
+        container.innerHTML = `<p style="text-align:center; color:var(--danger);">${err.message}</p>`;
+      }
+    }
+
+    function renderEvent(event, matches) {
+      const container = document.getElementById('eventContainer');
+
+      const genreTags = event.genre_tags || [];
+      const isOwner = Auth.isAuthenticated() && Auth.getUser()?.id === event.organizer_id;
+
+      container.innerHTML = `
+        <!-- Event Header -->
+        <div class="event-card" style="margin-bottom:30px;">
+          <div class="event-card-image" style="height:250px; font-size:5rem;">🎉</div>
+          <div class="event-card-body" style="padding:30px;">
+            <div style="display:flex; justify-content:space-between; align-items:start; flex-wrap:wrap; gap:15px;">
+              <div>
+                <h1 style="font-size:2rem; margin-bottom:10px;">${event.title}</h1>
+                <div style="margin-bottom:15px;">
+                  ${genreTags.map(g => `<span class="tag">${g}</span>`).join(' ')}
+                </div>
+              </div>
+              <span class="tag ${event.status === 'published' ? 'tag-success' : 'tag-warning'}">${event.status}</span>
+            </div>
+
+            ${event.description ? `<p style="color:var(--gray); margin-bottom:20px; font-size:1.1rem; line-height:1.8;">${event.description}</p>` : ''}
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:20px; margin-bottom:25px;">
+              <div>
+                <strong>📅 Date & Time</strong>
+                <p style="color:var(--gray); margin-top:5px;">${formatDate(event.start_date)}</p>
+                ${event.end_date ? `<p style="color:var(--gray);">Until ${formatDate(event.end_date)}</p>` : ''}
+              </div>
+              <div>
+                <strong>📍 Location</strong>
+                <p style="color:var(--gray); margin-top:5px;">
+                  ${event.venue_name || ''}
+                  ${event.venue_address ? `<br>${event.venue_address}` : ''}
+                  <br>${event.city || ''}${event.state ? `, ${event.state}` : ''}
+                </p>
+              </div>
+              <div>
+                <strong>🎭 Type</strong>
+                <p style="color:var(--gray); margin-top:5px;">${event.event_type || 'Event'}</p>
+                ${event.capacity ? `<p style="color:var(--gray);">Capacity: ${event.capacity}</p>` : ''}
+              </div>
+              ${event.ticket_price_min ? `
+              <div>
+                <strong>💰 Tickets</strong>
+                <p style="color:var(--gray); margin-top:5px;">
+                  $${event.ticket_price_min}${event.ticket_price_max ? ` - $${event.ticket_price_max}` : ''}
+                </p>
+                ${event.ticket_url ? `<a href="${event.ticket_url}" target="_blank" style="color:var(--primary);">Buy Tickets →</a>` : ''}
+              </div>
+              ` : ''}
+            </div>
+
+            <div style="display:flex; gap:15px; flex-wrap:wrap; margin-top:20px;">
+              ${isOwner ? `
+                <a href="dashboard.html" class="btn btn-primary">Manage Event</a>
+              ` : ''}
+              ${Auth.isAuthenticated() && !isOwner ? `
+                <button class="btn btn-primary" onclick="requestBoost(${event.id})">🚀 Request to Boost</button>
+              ` : ''}
+              <a href="events.html" class="btn btn-outline">← Back to Events</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Organizer Info -->
+        <div class="dashboard-card" style="margin-bottom:30px;">
+          <h3>📋 Organizer</h3>
+          <div style="display:flex; align-items:center; gap:15px; margin-top:15px;">
+            <div style="width:50px; height:50px; border-radius:50%; background:linear-gradient(135deg, var(--primary), var(--secondary)); display:flex; align-items:center; justify-content:center; color:white; font-size:1.5rem;">👤</div>
+            <div>
+              <strong>${event.organizer_name || event.organizer_username}</strong>
+              <p style="color:var(--gray); font-size:0.9rem;">@${event.organizer_username}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Matched Boosters -->
+        <div class="dashboard-card" style="margin-bottom:30px;">
+          <h3>🚀 Matched Boosters (${matches.length})</h3>
+          ${matches.length === 0 ? `
+            <p style="color:var(--gray); margin-top:15px;">No boosters matched yet. ${isOwner ? '<br><button class="btn btn-primary" style="margin-top:15px;" onclick="runMatching()">🤖 Run Matching Engine</button>' : ''}</p>
+          ` : `
+            <div style="margin-top:20px;">
+              ${matches.map(match => `
+                <div class="match-card" style="margin-bottom:15px;">
+                  <div class="match-header">
+                    <div>
+                      <h3>${match.stage_name || match.full_name}</h3>
+                      <p class="profile-type">${match.promoter_type}</p>
+                    </div>
+                    <div class="match-score">${match.match_score}%</div>
+                  </div>
+                  <div class="match-reasons">
+                    ${(match.match_reasons || []).map(r => `<span class="tag">${r}</span>`).join('')}
+                  </div>
+                  <div class="event-meta">
+                    <span>👥 ${formatNumber(match.total_followers || 0)} followers</span>
+                    <span>⭐ ${match.rating ? match.rating.toFixed(1) : 'New'}</span>
+                    <span>💰 $${match.min_fee || 0}${match.max_fee ? ` - $${match.max_fee}` : '+'}</span>
+                  </div>
+                  <div class="match-actions">
+                    <a href="promoter-profile.html?id=${match.promoter_id}&eventId=${event.id}" class="btn btn-outline">View Profile</a>
+                    ${match.status === 'pending' ? `<span class="tag tag-warning">${match.status}</span>` : `<span class="tag tag-success">${match.status}</span>`}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `}
+        </div>
+
+        <!-- Boost Requests (for organizers) -->
+        ${isOwner ? `
+        <div class="dashboard-card">
+          <h3>📨 Boost Requests</h3>
+          <div id="boostRequestsContainer" style="margin-top:15px;">
+            <div class="loading">Loading requests</div>
+          </div>
+        </div>
+        ` : ''}
+      `;
+
+      // Load boost requests if owner
+      if (isOwner) loadBoostRequests(event.id);
+    }
+
+    async function runMatching() {
+      try {
+        const data = await Auth.api(`/matches/event/${eventId}/run`, { method: 'POST' });
+        alert(`Found ${data.count} potential boosters!`);
+        loadEvent(eventId);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function requestBoost(eventId) {
+      if (!Auth.isAuthenticated()) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const message = prompt('Introduce yourself and what you can offer:');
+      if (!message) return;
+      const serviceType = prompt('Service type (promotion/appearance/both):') || 'promotion';
+      const fee = prompt('Proposed fee ($):') || '';
+
+      try {
+        await Auth.api('/matches/request', {
+          method: 'POST',
+          body: JSON.stringify({
+            eventId,
+            message,
+            proposedServiceType: serviceType,
+            proposedFee: fee || null
+          })
+        });
+        alert('Boost request sent!');
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function loadBoostRequests(eventId) {
+      const container = document.getElementById('boostRequestsContainer');
+      if (!container) return;
+
+      try {
+        const data = await Auth.api(`/matches/event/${eventId}/requests`);
+        const requests = data.requests || [];
+
+        if (requests.length === 0) {
+          container.innerHTML = '<p style="color:var(--gray);">No boost requests yet.</p>';
+          return;
+        }
+
+        container.innerHTML = requests.map(req => `
+          <div class="match-card" style="margin-bottom:15px;">
+            <div class="match-header">
+              <div>
+                <h3>${req.stage_name || req.full_name}</h3>
+                <p class="profile-type">${req.promoter_type}</p>
+              </div>
+              <span class="tag tag-warning">${req.status}</span>
+            </div>
+            <p style="color:var(--gray); margin:10px 0;">${req.message || 'No message'}</p>
+            <div class="event-meta">
+              <span>🎯 ${req.proposed_service_type}</span>
+              <span>💰 $${req.proposed_fee || 'Negotiable'}</span>
+              <span>👥 ${formatNumber(req.total_followers || 0)} followers</span>
+            </div>
+            <div class="match-actions">
+              <button class="btn btn-success" onclick="acceptBoostRequest(${req.id})">Accept</button>
+              <button class="btn btn-danger" onclick="declineBoostRequest(${req.id})">Decline</button>
+              <a href="promoter-profile.html?id=${req.promoter_id}&eventId=${eventId}" class="btn btn-outline">View Profile</a>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = '<p style="color:var(--gray);">No requests yet.</p>';
+      }
+    }
+
+    async function acceptBoostRequest(requestId) {
+      try {
+        await Auth.api(`/matches/requests/${requestId}/accept`, { method: 'PUT' });
+        loadBoostRequests(eventId);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function declineBoostRequest(requestId) {
+      try {
+        await Auth.api(`/matches/requests/${requestId}/decline`, { method: 'PUT' });
+        loadBoostRequests(eventId);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+  </script>
+</body>
+</html>

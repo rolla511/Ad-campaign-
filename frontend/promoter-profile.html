@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Promoter Profile — Party Booster</title>
+  <link rel="stylesheet" href="css/style.css?v=2">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="logo">🎉 Party Booster</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="events.html">Events</a></li>
+        <li><a href="promoters.html">Promoters</a></li>
+        <li id="authLinks">
+          <a href="login.html" class="btn btn-outline">Login</a>
+          <a href="register.html" class="btn btn-primary">Sign Up</a>
+        </li>
+        <li id="userLinks" style="display:none;">
+          <a href="create-event.html" class="btn btn-primary">Create Event</a>
+          <a href="dashboard.html">Dashboard</a>
+          <a href="#" id="logoutBtn">Logout</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="promoter-profile" id="profileContainer">
+    <div class="loading">Loading profile</div>
+  </div>
+
+  <script src="js/app.js?v=2"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const promoterId = params.get('id');
+
+    if (!promoterId) {
+      document.getElementById('profileContainer').innerHTML = '<p>Invalid promoter ID.</p>';
+    } else {
+      loadProfile(promoterId);
+    }
+
+    async function loadProfile(id) {
+      const container = document.getElementById('profileContainer');
+      container.innerHTML = '<div class="loading">Loading profile</div>';
+
+      try {
+        const data = await Auth.api(`/promoters/${id}`);
+        renderProfile(data);
+      } catch (err) {
+        container.innerHTML = `<p style="color:var(--danger);">${err.message}</p>`;
+      }
+    }
+
+    function renderProfile(data) {
+      const { profile, socialMedia, demographics, logistics } = data;
+      const container = document.getElementById('profileContainer');
+
+      const totalFollowers = (socialMedia || []).reduce(
+        (sum, sm) => sum + (sm.followers_count || 0) + (sm.subscribers_count || 0), 0
+      );
+
+      container.innerHTML = `
+        <!-- Profile Header -->
+        <div class="profile-header">
+          <div class="profile-avatar">${getPromoterEmoji(profile.promoter_type)}</div>
+          <h1 class="profile-name">${profile.stage_name || profile.full_name || profile.username}</h1>
+          <p class="profile-type">${formatPromoterType(profile.promoter_type)}</p>
+          <p style="color:var(--gray); max-width:500px; margin:0 auto;">${profile.bio || 'No bio yet.'}</p>
+
+          <div class="profile-stats">
+            <div class="stat">
+              <div class="stat-value">${formatNumber(totalFollowers)}</div>
+              <div class="stat-label">Total Followers</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">${profile.rating ? profile.rating.toFixed(1) : 'New'}</div>
+              <div class="stat-label">Rating</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">${profile.total_events || 0}</div>
+              <div class="stat-label">Events</div>
+            </div>
+          </div>
+
+          <div class="social-links">
+            ${(socialMedia || []).map(sm => `
+              <a href="${sm.profile_url}" target="_blank" class="social-link">
+                ${getPlatformIcon(sm.platform)} ${sm.username}
+                <small>(${formatNumber(sm.followers_count + sm.subscribers_count)})</small>
+              </a>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Service Info -->
+        <div class="dashboard-card" style="margin-bottom:30px;">
+          <h3>Services & Pricing</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+            <div>
+              <strong>Service Types:</strong>
+              <div style="margin-top:8px;">
+                ${(profile.service_types || []).map(s => `<span class="tag tag-success">${s}</span>`).join(' ')}
+              </div>
+            </div>
+            <div>
+              <strong>Fee Range:</strong>
+              <p style="margin-top:8px;">
+                ${profile.min_fee ? `$${profile.min_fee}` : 'Contact'}
+                ${profile.max_fee ? ` - $${profile.max_fee}` : ''}
+              </p>
+            </div>
+          </div>
+          <div style="margin-top:15px;">
+            <strong>Availability:</strong>
+            <p style="margin-top:8px; color:var(--gray);">
+              ${profile.is_available ? '✅ Available' : '❌ Currently Unavailable'}
+              ${profile.availability_start_date ? ` (from ${new Date(profile.availability_start_date).toLocaleDateString()})` : ''}
+            </p>
+          </div>
+        </div>
+
+        <!-- Logistics -->
+        ${logistics ? `
+        <div class="dashboard-card" style="margin-bottom:30px;">
+          <h3>Logistics</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+            <div>
+              <strong>Based in:</strong>
+              <p style="margin-top:8px; color:var(--gray);">
+                ${logistics.city_based || ''}${logistics.state_based ? `, ${logistics.state_based}` : ''}
+              </p>
+            </div>
+            <div>
+              <strong>Willing to Travel:</strong>
+              <p style="margin-top:8px; color:var(--gray);">
+                ${logistics.willing_to_travel ? '✅ Yes' : '❌ No'}
+                ${logistics.max_travel_distance_km ? ` (up to ${logistics.max_travel_distance_km} km)` : ''}
+              </p>
+            </div>
+            <div>
+              <strong>Own Equipment:</strong>
+              <p style="margin-top:8px; color:var(--gray);">
+                ${logistics.has_own_equipment ? '✅ Yes' : '❌ No'}
+                ${logistics.equipment_list && logistics.equipment_list.length ? `: ${logistics.equipment_list.join(', ')}` : ''}
+              </p>
+            </div>
+            <div>
+              <strong>Notice Period:</strong>
+              <p style="margin-top:8px; color:var(--gray);">${logistics.notice_period_days || 7} days</p>
+            </div>
+          </div>
+          ${logistics.special_requirements ? `<p style="margin-top:15px;"><strong>Special Requirements:</strong> ${logistics.special_requirements}</p>` : ''}
+        </div>
+        ` : ''}
+
+        <!-- Fan Demographics -->
+        ${(demographics && demographics.length > 0) ? `
+        <div class="dashboard-card" style="margin-bottom:30px;">
+          <h3>Fan Base Demographics</h3>
+          ${demographics.map(demo => `
+            <div style="margin-bottom:20px;">
+              <strong>${demo.platform}</strong>
+              <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:15px; margin-top:10px;">
+                <div>
+                  <small>Age 18-24</small>
+                  <p>${demo.age_range_18_24}%</p>
+                </div>
+                <div>
+                  <small>Age 25-34</small>
+                  <p>${demo.age_range_25_34}%</p>
+                </div>
+                <div>
+                  <small>Age 35-44</small>
+                  <p>${demo.age_range_35_44}%</p>
+                </div>
+                <div>
+                  <small>Age 45+</small>
+                  <p>${demo.age_range_45_plus}%</p>
+                </div>
+              </div>
+              ${demo.top_cities && demo.top_cities.length ? `
+                <div style="margin-top:15px;">
+                  <strong>Top Cities:</strong>
+                  <div style="margin-top:8px;">
+                    ${demo.top_cities.slice(0, 5).map(c => `<span class="tag">${c.city} (${c.percentage}%)</span>`).join(' ')}
+                  </div>
+                </div>
+              ` : ''}
+              ${demo.interests && demo.interests.length ? `
+                <div style="margin-top:15px;">
+                  <strong>Interests:</strong>
+                  <div style="margin-top:8px;">
+                    ${demo.interests.map(i => `<span class="tag">${i}</span>`).join(' ')}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+        ` : ''}
+
+        <!-- Boost Request (if logged in) -->
+        ${Auth.isAuthenticated() ? `
+        <div class="dashboard-card">
+          <h3>Request to Boost</h3>
+          <form id="boostForm">
+            <div class="form-group">
+              <label for="message">Message</label>
+              <textarea id="message" placeholder="Introduce yourself and what you can offer..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="serviceType">Service Type</label>
+              <select id="serviceType">
+                <option value="promotion">Promotion Only</option>
+                <option value="appearance">Live Appearance</option>
+                <option value="both">Both</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="fee">Proposed Fee ($)</label>
+              <input type="number" id="fee" step="0.01">
+            </div>
+            <button type="submit" class="btn btn-primary">Send Request</button>
+          </form>
+        </div>
+        ` : ''}
+      `;
+
+      // Boost request handler
+      const boostForm = document.getElementById('boostForm');
+      if (boostForm) {
+        boostForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          try {
+            await Auth.api('/matches/request', {
+              method: 'POST',
+              body: JSON.stringify({
+                eventId: params.get('eventId'),
+                message: document.getElementById('message').value,
+                proposedServiceType: document.getElementById('serviceType').value,
+                proposedFee: document.getElementById('fee').value
+              })
+            });
+            alert('Boost request sent!');
+          } catch (err) {
+            alert(err.message);
+          }
+        });
+      }
+    }
+
+    function getPromoterEmoji(type) {
+      const emojis = {
+        content_creator: '📱', streamer: '🎮', model: '📸',
+        dancer: '💃', artist: '🎨', dj: '🎧', influencer: '⭐', other: '🎉'
+      };
+      return emojis[type] || '🎉';
+    }
+
+    function getPlatformIcon(platform) {
+      const icons = {
+        instagram: '📷', tiktok: '🎵', youtube: '▶️',
+        twitch: '🎮', twitter: '🐦', facebook: '📘', snapchat: '👻'
+      };
+      return icons[platform] || '🔗';
+    }
+
+    function formatPromoterType(type) {
+      return type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }
+  </script>
+</body>
+</html>
