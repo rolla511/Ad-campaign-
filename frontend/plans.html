@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plans — Party Booster</title>
+  <link rel="stylesheet" href="css/style.css?v=4">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="index.html" class="logo">🎉 Party Booster</a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="events.html">Events</a></li>
+        <li><a href="promoters.html">Promoters</a></li>
+        <li id="authLinks">
+          <a href="login.html" class="btn btn-outline">Login</a>
+          <a href="register.html" class="btn btn-primary">Sign Up</a>
+        </li>
+        <li id="userLinks" style="display:none;">
+          <a href="create-event.html" class="btn btn-primary">Create Event</a>
+          <a href="dashboard.html">Dashboard</a>
+          <a href="#" id="logoutBtn">Logout</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="form-container auth-form signup-form">
+    <h1>Choose a plan</h1>
+    <p>Party Booster collects only the one-time event fee or monthly subscription. Coordinators and boosters arrange and pay for bookings directly with each other.</p>
+    <p id="currentPlan" role="status">Loading your account…</p>
+    <div class="lead-list plan-list">
+      <article class="lead-card">
+        <h2>Free</h2>
+        <p>Temporary account, unverified profile, and in-app messages. Free coordinator accounts and event posts are erased after seven days or 24 hours after the seventh matching lead, whichever comes first.</p>
+      </article>
+      <article class="lead-card" id="oneTimePlan">
+        <h2>One event · $15.99 once</h2>
+        <p>Coordinate one event. Its date locks after publishing.</p>
+        <button class="btn btn-primary" type="button" data-plan="onetime">Pay for one event</button>
+      </article>
+      <article class="lead-card">
+        <h2>Monthly · $30/month</h2>
+        <p>Qualified subscribers receive priority in criteria searches. Verified billing and ratings from completed bookings help build trust. You can manage renewal here.</p>
+        <button class="btn btn-primary" type="button" data-plan="subscriber">Subscribe monthly</button>
+        <button class="btn btn-outline" type="button" id="billingPortal" hidden>Manage subscription</button>
+        <button class="btn btn-outline" type="button" id="paypalCancel" hidden>Cancel PayPal renewal</button>
+      </article>
+    </div>
+    <p id="planStatus" role="status"></p>
+  </main>
+  <script src="js/app.js?v=5"></script>
+  <script>
+    if (requireAuth()) {
+      const status = document.getElementById('planStatus');
+      const selected = new URLSearchParams(window.location.search);
+      const paymentReturned = selected.get('payment') === 'returned';
+      const returnedPlan = selected.get('plan');
+      document.getElementById('oneTimePlan').hidden = Auth.getUser()?.role !== 'organizer';
+      if (selected.has('plan')) status.textContent = 'Your account was created. Select the plan to retry checkout.';
+      if (paymentReturned) {
+        status.textContent = 'Waiting for payment confirmation. Your plan will appear here once confirmed.';
+      }
+
+      let checks = 0;
+      async function refreshPlan() {
+        try {
+          const account = await Auth.api('/auth/tier');
+          let expiry = '';
+          if (account.freeDeleteAt) expiry = ' · Erases ' + new Date(account.freeDeleteAt).toLocaleString();
+          if (account.tier === 'subscriber' && account.expiresAt) {
+            expiry = ' · Paid through ' + new Date(account.expiresAt).toLocaleDateString();
+          }
+          document.getElementById('currentPlan').textContent = account.tierName + expiry;
+          document.querySelector('[data-plan=onetime]').disabled = account.tier !== 'free';
+          document.querySelector('[data-plan=subscriber]').hidden = account.hasSubscription || account.tier === 'subscriber';
+          document.getElementById('billingPortal').hidden = account.billingProvider !== 'stripe';
+          document.getElementById('paypalCancel').hidden = account.billingProvider !== 'paypal';
+          if (paymentReturned) {
+            const confirmed = returnedPlan ? account.tier === returnedPlan : account.tier !== 'free';
+            if (confirmed) status.textContent = 'Your paid plan is active.';
+            else if (checks++ < 5) setTimeout(refreshPlan, 3000);
+          }
+        } catch (error) {
+          status.textContent = error.message;
+        }
+      }
+
+      async function clickBilling(button, action, data) {
+        button.disabled = true;
+        status.textContent = 'Opening secure billing…';
+        try { await openBillingSession(action, data); }
+        catch (error) {
+          status.textContent = error.message;
+          button.disabled = false;
+        }
+      }
+
+      for (const button of document.querySelectorAll('[data-plan]')) {
+        button.addEventListener('click', () => clickBilling(button, 'checkout', { plan: button.dataset.plan }));
+      }
+      document.getElementById('billingPortal').addEventListener('click', event => clickBilling(event.currentTarget, 'portal', {}));
+      document.getElementById('paypalCancel').addEventListener('click', async event => {
+        if (!window.confirm('Cancel PayPal renewal? You keep access through the paid period.')) return;
+        const button = event.currentTarget;
+        button.disabled = true;
+        try {
+          await Auth.api('/billing/cancel-paypal', { method: 'POST' });
+          await refreshPlan();
+          status.textContent = 'Renewal cancelled. Your plan stays active through the paid period.';
+        } catch (error) { status.textContent = error.message; }
+        finally { button.disabled = false; }
+      });
+
+      async function loadPlan() {
+        if (paymentReturned && selected.get('order')) {
+          try {
+            await Auth.api('/billing/complete', {
+              method: 'POST', body: JSON.stringify({ orderId: selected.get('order') })
+            });
+          } catch (error) { status.textContent = error.message; }
+        }
+        await refreshPlan();
+      }
+      void loadPlan();
+    }
+  </script>
+</body>
+</html>
