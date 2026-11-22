@@ -1,0 +1,14 @@
+{
+  "id": "/",
+  "name": "Party Booster",
+  "short_name": "Party Booster",
+  "start_url": "/dashboard.html?tab=profile",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#1a1a2e",
+  "background_color": "#f5f4fa",
+  "icons": [
+    { "src": "/icons/app-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/app-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "party-booster-frontend",
+  "version": "1.0.0",
+  "description": "Party Booster website and same-origin API gateway",
+  "private": true,
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "scripts": {
+    "start": "node server/gateway.mjs",
+    "build": "echo 'Static site - no build needed'"
+  }
+}

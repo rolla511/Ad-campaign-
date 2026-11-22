@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking conversations — Party Booster</title>
+  <link rel="stylesheet" href="css/style.css?v=5">
+</head>
+<body>
+  <main class="form-container">
+    <a id="openConversations" class="btn btn-primary" href="dashboard.html?tab=profile#profile-messages">Open booking conversations</a>
+  </main>
+  <script>
+    const previous = new URLSearchParams(location.search);
+    const destination = new URLSearchParams({ tab: 'profile' });
+    for (const key of ['userId', 'eventId', 'bookingId']) {
+      const value = previous.get(key);
+      if (/^[1-9]\d{0,9}$/.test(value || '')) destination.set(key, value);
+    }
+    const link = document.getElementById('openConversations');
+    link.href = 'dashboard.html?' + destination + '#profile-messages';
+    window.addEventListener('load', () => location.replace(link.href), { once: true });
+  </script>
+</body>
+</html>
