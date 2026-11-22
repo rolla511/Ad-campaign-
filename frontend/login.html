@@ -46,7 +46,7 @@
     </p>
   </main>
 
-  <script src="js/app.js?v=4"></script>
+  <script src="js/app.js?v=9"></script>
   <script>
     const loginForm = document.getElementById('loginForm');
     carrySignInDestination(document.getElementById('registerLink'));
@@ -63,11 +63,7 @@
       messageDiv.hidden = true;
 
       try {
-        const data = await Auth.api('/auth/login', {
-          method: 'POST',
-          body: JSON.stringify({ username, password })
-        });
-        Auth.setToken(data.token);
+        await Auth.startSession('/auth/login', { username, password });
         window.location.replace(getSignInDestination());
       } catch (err) {
         messageDiv.textContent = err.message;
