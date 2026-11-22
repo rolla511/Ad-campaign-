@@ -2,6 +2,7 @@
 
 const TOKEN_KEY = 'pb_token';
 const DEVICE_PUSH_KEY = 'pb_push_device';
+const API_ORIGIN = 'https://party-booster.onrender.com';
 
 function savedDevicePush() {
   try { return JSON.parse(localStorage.getItem(DEVICE_PUSH_KEY)); }
@@ -88,6 +89,9 @@ const Auth = {
   },
 
   setToken(token) {
+    if (typeof token !== 'string' || !/^(?:[A-Za-z0-9_-]+\.){2}[A-Za-z0-9_-]+$/.test(token)) {
+      throw new Error('The backend did not return a sign-in token.');
+    }
     localStorage.setItem(TOKEN_KEY, token);
     this.updateUI();
   },
@@ -138,19 +142,18 @@ const Auth = {
   },
 
   async api(endpoint, options = {}) {
-    const headers = {
-      'Content-Type': 'application/json',
-      ...options.headers
-    };
+    const headers = new Headers(options.headers);
+    if (options.body != null && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
 
-    const token = this.isAuthenticated() ? this.getToken() : null;
+    const startsSession = ['/auth/register', '/auth/login'].includes(endpoint);
+    const token = !startsSession && this.isAuthenticated() ? this.getToken() : null;
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers.set('Authorization', `Bearer ${token}`);
     }
 
     let response;
     try {
-      response = await fetch(`/api${endpoint}`, {
+      response = await fetch(`${API_ORIGIN}/api${endpoint}`, {
         ...options, headers, credentials: 'omit', redirect: 'error',
         signal: options.signal || AbortSignal.timeout(15000)
       });
