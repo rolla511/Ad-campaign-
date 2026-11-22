@@ -82,8 +82,48 @@ function updateLeadBadge(unreadCount) {
   if (link) link.textContent = unreadCount ? `Leads (${unreadCount})` : 'Leads';
 }
 
+async function requestApi(endpoint, options, token = null) {
+  const headers = new Headers(options.headers);
+  if (options.body != null && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+
+  let response;
+  try {
+    response = await fetch(`${API_ORIGIN}/api${endpoint}`, {
+      ...options, headers, credentials: 'omit', redirect: 'error',
+      signal: options.signal || AbortSignal.timeout(15000)
+    });
+  } catch {
+    throw new Error('Party Booster is unavailable right now. Please try again.');
+  }
+
+  if (response.status >= 500 || !response.headers.get('content-type')?.includes('application/json')) {
+    throw new Error('Party Booster is unavailable right now. Please try again.');
+  }
+
+  if (response.status === 401 && token && token === Auth.getToken()) {
+    localStorage.removeItem(TOKEN_KEY);
+    Auth.updateUI();
+  }
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.details?.[0]?.message || data.error || 'Request failed');
+  }
+
+  return data;
+}
+
 // Auth Helper
 const Auth = {
+  async startSession(endpoint, credentials) {
+    const { token } = await requestApi(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(credentials)
+    });
+    this.setToken(token);
+  },
+
   getToken() {
     return localStorage.getItem(TOKEN_KEY);
   },
@@ -141,41 +181,11 @@ const Auth = {
     }
   },
 
-  async api(endpoint, options = {}) {
-    const headers = new Headers(options.headers);
-    if (options.body != null && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
-
-    const startsSession = ['/auth/register', '/auth/login'].includes(endpoint);
-    const token = !startsSession && this.isAuthenticated() ? this.getToken() : null;
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`);
-    }
-
-    let response;
-    try {
-      response = await fetch(`${API_ORIGIN}/api${endpoint}`, {
-        ...options, headers, credentials: 'omit', redirect: 'error',
-        signal: options.signal || AbortSignal.timeout(15000)
-      });
-    } catch {
-      throw new Error('Party Booster is unavailable right now. Please try again.');
-    }
-
-    if (response.status >= 500 || !response.headers.get('content-type')?.includes('application/json')) {
-      throw new Error('Party Booster is unavailable right now. Please try again.');
-    }
-
-    if (response.status === 401 && token && token === this.getToken()) {
-      localStorage.removeItem(TOKEN_KEY);
-      this.updateUI();
-    }
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.details?.[0]?.message || data.error || 'Request failed');
-    }
-
-    return data;
+  api(endpoint, options = {}) {
+    // Older signup and login pages still call this method directly.
+    if (endpoint === '/auth/register' || endpoint === '/auth/login') return requestApi(endpoint, options);
+    const token = this.isAuthenticated() ? this.getToken() : null;
+    return requestApi(endpoint, options, token);
   }
 };
 
@@ -192,6 +202,7 @@ async function openBillingSession(action, body = {}) {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
   setupNavigation();
+  if (document.querySelector('#registerForm, #loginForm')) return;
   Auth.updateUI();
   const tab = new URLSearchParams(location.search).get('tab');
   const profileLoadsLeads = location.pathname.endsWith('/dashboard.html') && !['events', 'matches'].includes(tab);
