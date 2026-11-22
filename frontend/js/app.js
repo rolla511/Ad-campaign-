@@ -1,8 +1,8 @@
 // Party Booster — Main JavaScript
 
+const API_ORIGIN = 'https://party-booster.onrender.com';
 const TOKEN_KEY = 'pb_token';
 const DEVICE_PUSH_KEY = 'pb_push_device';
-const API_ORIGIN = 'https://party-booster.onrender.com';
 
 function savedDevicePush() {
   try { return JSON.parse(localStorage.getItem(DEVICE_PUSH_KEY)); }
