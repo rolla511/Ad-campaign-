@@ -1,0 +1,325 @@
+// Party Booster — Main JavaScript
+
+const RENDER_API_ORIGIN = 'https://party-booster.onrender.com';
+const TOKEN_KEY = 'pb_token';
+const DEVICE_PUSH_KEY = 'pb_push_device';
+
+function savedDevicePush() {
+  try { return JSON.parse(localStorage.getItem(DEVICE_PUSH_KEY)); }
+  catch { return null; }
+}
+
+async function disconnectDevicePush(userId) {
+  const device = savedDevicePush();
+  if (!device || device.userId !== userId) return true;
+  const remote = Auth.api('/push/subscription', {
+    method: 'DELETE', body: JSON.stringify({ endpoint: device.endpoint }), signal: AbortSignal.timeout(2500)
+  });
+  const browser = (async () => {
+    const registration = await navigator.serviceWorker?.getRegistration('/');
+    const subscription = await registration?.pushManager?.getSubscription();
+    if (!subscription) return;
+    if (subscription.endpoint !== device.endpoint || !await subscription.unsubscribe()) {
+      throw new Error('The device subscription could not be removed.');
+    }
+  })();
+  const results = await Promise.allSettled([remote, browser]);
+  const disconnected = results.some(result => result.status === 'fulfilled');
+  if (disconnected && savedDevicePush()?.userId === userId) localStorage.removeItem(DEVICE_PUSH_KEY);
+  return disconnected;
+}
+
+function escapeMarkup(value) {
+  const replacements = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  return String(value ?? '').replace(/[&<>"']/g, character => replacements[character]);
+}
+
+function setupNavigation() {
+  const list = document.querySelector('.nav-links');
+  if (!list) return;
+
+  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  for (const link of list.querySelectorAll('a[href]')) {
+    if (link.getAttribute('href') === currentPage) link.setAttribute('aria-current', 'page');
+  }
+
+  const userLinks = document.getElementById('userLinks');
+  if (userLinks) {
+    const profile = userLinks.querySelector('a[href="dashboard.html"]');
+    if (profile) profile.textContent = 'My Profile';
+    const leads = document.createElement('a');
+    leads.href = 'dashboard.html?tab=profile#profile-leads';
+    leads.id = 'navLeads';
+    leads.textContent = 'Leads';
+    userLinks.insertBefore(leads, document.getElementById('logoutBtn'));
+    const plans = document.createElement('a');
+    plans.href = 'plans.html';
+    plans.textContent = 'Plans';
+    userLinks.insertBefore(plans, document.getElementById('logoutBtn'));
+    const messages = document.createElement('a');
+    messages.href = 'dashboard.html?tab=profile#profile-messages';
+    messages.textContent = 'Messages';
+    userLinks.insertBefore(messages, document.getElementById('logoutBtn'));
+  }
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'nav-toggle';
+  button.textContent = 'Menu';
+  list.id = 'site-navigation';
+  button.setAttribute('aria-controls', list.id);
+  button.setAttribute('aria-expanded', 'false');
+  button.addEventListener('click', () => {
+    const open = list.classList.toggle('nav-open');
+    button.setAttribute('aria-expanded', String(open));
+  });
+  list.before(button);
+  list.classList.add('nav-ready');
+}
+
+function updateLeadBadge(unreadCount) {
+  const link = document.getElementById('navLeads');
+  if (link) link.textContent = unreadCount ? `Leads (${unreadCount})` : 'Leads';
+}
+
+let apiOrigin;
+
+function selectApiOrigin() {
+  apiOrigin ??= (async () => {
+    const websiteOrigin = window.location.origin;
+    if (!/^https?:\/\//.test(websiteOrigin) || websiteOrigin === RENDER_API_ORIGIN) {
+      return RENDER_API_ORIGIN;
+    }
+
+    // A static host may return its HTML page for every path. Verify the public
+    // events response before sending a password or a token to a website gateway.
+    try {
+      const response = await fetch(websiteOrigin + '/api/events', {
+        credentials: 'omit', cache: 'no-store', redirect: 'error',
+        headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(2500)
+      });
+      if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        const data = await response.json();
+        if (Array.isArray(data?.events)) return websiteOrigin;
+      }
+    } catch {
+      // A separate static deployment can still use the configured Render API.
+    }
+    return RENDER_API_ORIGIN;
+  })();
+  return apiOrigin;
+}
+
+async function requestApi(endpoint, options, token = null) {
+  const headers = new Headers(options.headers);
+  headers.set('Accept', 'application/json');
+  if (options.body != null && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  if (token) headers.set('Authorization', 'Bearer ' + token);
+
+  let response;
+  try {
+    const origin = await selectApiOrigin();
+    response = await fetch(origin + '/api' + endpoint, {
+      ...options, headers, credentials: 'omit', redirect: 'error',
+      signal: options.signal || AbortSignal.timeout(15000)
+    });
+  } catch {
+    throw new Error('Could not reach the Party Booster API. Check the website gateway or the website origin allowed by the Render backend.');
+  }
+
+  if (response.status === 204) return null;
+
+  let data;
+  if (response.headers.get('content-type')?.includes('application/json')) {
+    try { data = await response.json(); }
+    catch { /* Report an unusable response below. */ }
+  }
+
+  if (response.status === 401 && data && token && token === Auth.getToken()) {
+    localStorage.removeItem(TOKEN_KEY);
+    Auth.updateUI();
+  }
+
+  if (!response.ok) {
+    const message = data?.details?.[0]?.message || data?.error;
+    throw new Error(typeof message === 'string' ? message : 'Party Booster API request failed (HTTP ' + response.status + ').');
+  }
+  if (data === undefined) {
+    throw new Error('The Party Booster API returned a non-JSON response. Check that /api points to the backend.');
+  }
+
+  return data;
+}
+
+// Auth Helper
+const Auth = {
+  async startSession(endpoint, credentials) {
+    const { token } = await requestApi(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(credentials)
+    });
+    this.setToken(token);
+  },
+
+  getToken() {
+    return localStorage.getItem(TOKEN_KEY);
+  },
+
+  setToken(token) {
+    if (typeof token !== 'string' || !/^(?:[A-Za-z0-9_-]+\.){2}[A-Za-z0-9_-]+$/.test(token)) {
+      throw new Error('The backend did not return a sign-in token.');
+    }
+    localStorage.setItem(TOKEN_KEY, token);
+    this.updateUI();
+  },
+
+  getUser() {
+    const token = this.getToken();
+    if (!token) return null;
+    try {
+      const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const bytes = Uint8Array.from(atob(payload), char => char.charCodeAt(0));
+      return JSON.parse(new TextDecoder().decode(bytes));
+    } catch {
+      return null;
+    }
+  },
+
+  async logout() {
+    const userId = this.getUser()?.id;
+    if (userId && savedDevicePush()?.userId === userId) {
+      await Promise.race([disconnectDevicePush(userId), new Promise(resolve => setTimeout(resolve, 3000))]);
+    }
+    localStorage.removeItem(TOKEN_KEY);
+    this.updateUI();
+    window.location.href = 'index.html';
+  },
+
+  isAuthenticated() {
+    const user = this.getUser();
+    return Number.isFinite(user?.exp) && user.exp > Date.now() / 1000;
+  },
+
+  updateUI() {
+    const authLinks = document.getElementById('authLinks');
+    const userLinks = document.getElementById('userLinks');
+    const signedIn = this.isAuthenticated();
+    const heroAction = document.getElementById('heroAccountAction');
+    if (heroAction) {
+      heroAction.href = signedIn ? 'dashboard.html' : 'register.html';
+      heroAction.textContent = signedIn ? 'Open My Profile' : 'Get Started Free';
+    }
+    if (signedIn) {
+      if (authLinks) authLinks.style.display = 'none';
+      if (userLinks) userLinks.style.display = 'block';
+    } else {
+      if (authLinks) authLinks.style.display = 'block';
+      if (userLinks) userLinks.style.display = 'none';
+    }
+  },
+
+  api(endpoint, options = {}) {
+    // Older signup and login pages still call this method directly.
+    if (endpoint === '/auth/register' || endpoint === '/auth/login') return requestApi(endpoint, options);
+    const token = this.isAuthenticated() ? this.getToken() : null;
+    return requestApi(endpoint, options, token);
+  }
+};
+
+async function openBillingSession(action, body = {}) {
+  const { url } = await Auth.api(`/billing/${action}`, { method: 'POST', body: JSON.stringify(body) });
+  const destination = new URL(url);
+  if (destination.protocol !== 'https:' ||
+      !['www.paypal.com', 'www.sandbox.paypal.com', 'checkout.stripe.com', 'billing.stripe.com'].includes(destination.hostname)) {
+    throw new Error('The secure checkout link is unavailable.');
+  }
+  window.location.assign(destination.href);
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+  setupNavigation();
+  if (document.querySelector('#registerForm, #loginForm')) return;
+  Auth.updateUI();
+  const tab = new URLSearchParams(location.search).get('tab');
+  const profileLoadsLeads = location.pathname.endsWith('/dashboard.html') && !['events', 'matches'].includes(tab);
+  if (!profileLoadsLeads && document.getElementById('navLeads') && Auth.isAuthenticated()) {
+    Auth.api('/lead-notifications').then(data => updateLeadBadge(data.unreadCount)).catch(() => {});
+  }
+
+  // Logout handler
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      Auth.logout();
+    });
+  }
+});
+
+// Require authentication for protected pages
+function requireAuth() {
+  if (!Auth.isAuthenticated()) {
+    const page = window.location.pathname.split('/').pop();
+    const destination = page + window.location.search + window.location.hash;
+    window.location.href = `login.html?${new URLSearchParams({ next: destination })}`;
+    return false;
+  }
+  return true;
+}
+
+function getSignInDestination() {
+  const next = new URLSearchParams(window.location.search).get('next') || '';
+  return /^(?:dashboard|create-event|plans|messages)\.html(?:[?#].*)?$/.test(next) ? next : 'dashboard.html';
+}
+
+function carrySignInDestination(link) {
+  const next = new URLSearchParams(window.location.search).get('next');
+  if (next) link.search = new URLSearchParams({ next: getSignInDestination() });
+}
+
+// Format date
+function formatDate(dateStr) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+// Format number with commas
+function formatNumber(num) {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K';
+  }
+  return num.toString();
+}
+
+// Show error message
+function showError(message, container = null) {
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'form-error';
+  errorDiv.textContent = message;
+  if (container) {
+    container.insertBefore(errorDiv, container.firstChild);
+  }
+  setTimeout(() => errorDiv.remove(), 5000);
+}
+
+// Show success message
+function showSuccess(message, container = null) {
+  const successDiv = document.createElement('div');
+  successDiv.className = 'form-success';
+  successDiv.textContent = message;
+  if (container) {
+    container.insertBefore(successDiv, container.firstChild);
+  }
+  setTimeout(() => successDiv.remove(), 5000);
+}
