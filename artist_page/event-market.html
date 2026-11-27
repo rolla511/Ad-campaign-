@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Artist Event Market | The ARHC</title>
+  <link rel="stylesheet" href="/account.css" />
+  <link rel="stylesheet" href="/event-market.css" />
+  <script src="/event-market.js" defer></script>
+</head>
+<body>
+  <header class="site-header"><a class="brand" href="/">The ARHC</a><nav class="account-actions" aria-label="Account navigation"><a href="/fan.html#coin-wallet">Coin wallet</a><a href="/arhc-guide.html">ARHC Guide</a></nav></header>
+  <main class="fan-layout event-market">
+    <h1>Artist Event Market</h1>
+    <p id="event-status" role="status">Loading the market…</p>
+    <a id="event-signin" href="/join.html?next=event-market" hidden>Sign in to browse events</a>
+    <a id="event-renew" href="/fan.html#membership-panel" hidden>Activate membership</a>
+    <div id="event-content" hidden>
+      <div class="event-top">
+        <p id="event-available"></p>
+        <button id="event-refresh" class="secondary" type="button">Refresh market</button>
+      </div>
+      <nav class="account-actions event-nav" aria-label="Market navigation">
+        <a href="#upcoming">Events</a><a href="#resales">Fan listings</a>
+        <a href="#event-coins">My event coins</a><a href="#event-alerts">Wallet alerts</a>
+        <a href="#event-manage" id="event-manage-link" hidden>Artist tools</a>
+      </nav>
+
+      <section class="account-card" id="upcoming" aria-labelledby="event-upcoming-title">
+        <h2 id="event-upcoming-title">Upcoming events</h2>
+        <div class="event-items" id="event-offers"></div>
+      </section>
+      <section class="account-card" id="resales" aria-labelledby="event-resale-title">
+        <h2 id="event-resale-title">Fan listings</h2>
+        <div class="event-items" id="event-listings"></div>
+      </section>
+      <div class="event-columns">
+        <section class="account-card" id="event-coins" aria-labelledby="event-wallet-title">
+          <h2 id="event-wallet-title">My event coins</h2>
+          <div id="event-wallet" class="event-items"></div>
+        </section>
+        <section class="account-card" id="event-alerts" aria-labelledby="event-alert-title">
+          <h2 id="event-alert-title">Wallet alerts</h2>
+          <ul id="event-activity" class="event-activity"></ul>
+        </section>
+      </div>
+
+      <section class="account-card" id="event-manage" aria-labelledby="event-manage-title" hidden>
+        <h2 id="event-manage-title">Artist tools</h2>
+        <div class="event-columns">
+          <section aria-labelledby="schedule-title">
+            <h3 id="schedule-title">Schedule an event</h3>
+            <form id="event-create">
+              <label>Event title<input name="title" maxlength="120" required /></label>
+              <label>Event description<textarea name="description" rows="3" maxlength="1000" required></textarea></label>
+              <label>Private access details<textarea name="accessDetails" rows="3" maxlength="1500" required></textarea><small>Members see these when they claim their event coin.</small></label>
+              <div class="event-columns">
+                <label>Starts (local time)<input name="startsAt" type="datetime-local" required /></label>
+                <label>Ends (local time)<input name="endsAt" type="datetime-local" required /></label>
+              </div>
+              <div class="event-columns">
+                <label>Fixed price (Bird &amp; Bee)<input name="priceBird" type="number" value="10" min="1" max="10000" required /></label>
+                <label>Total entries<input name="capacity" type="number" min="1" max="10000" required /></label>
+              </div>
+              <label>Entries reserved for splits<input name="splitReserve" type="number" value="0" min="0" max="10000" required /></label>
+              <button class="primary" type="submit">Review event release</button>
+            </form>
+          </section>
+          <section aria-labelledby="rules-title">
+            <h3 id="rules-title">Set a gift threshold</h3>
+            <p>Choose the wishlist gift and the later event that will supply the extra coin. Both events use the same fixed Bird &amp; Bee price.</p>
+            <form id="event-rule">
+              <label>Original event<select name="sourceId" required></select></label>
+              <label>Later event with reserved entries<select name="targetId" required></select></label>
+              <label>Qualifying gift<select name="goalId" required></select></label>
+              <label>Minimum contribution (USD gift-credit value)<input name="minimum" type="number" min="0.01" step="0.01" required /></label>
+              <button class="primary" type="submit">Review gift threshold</button>
+            </form>
+            <p><a href="/fan.html#artist-wishlist-section">Manage your wishlist gifts</a></p>
+          </section>
+        </div>
+        <h3>Fans eligible for a split</h3>
+        <div class="event-items" id="event-eligible"></div>
+        <h3>Your event releases</h3>
+        <div class="event-items" id="event-issues"></div>
+      </section>
+    </div>
+  </main>
+  <dialog id="event-confirm" class="account-card" aria-labelledby="event-confirm-title">
+    <h2 id="event-confirm-title">Review transaction</h2>
+    <p id="event-confirm-text"></p>
+    <form method="dialog" class="account-actions">
+      <button class="secondary" value="cancel" autofocus>Cancel</button>
+      <button class="primary" value="confirm">Confirm</button>
+    </form>
+  </dialog>
+</body>
+</html>

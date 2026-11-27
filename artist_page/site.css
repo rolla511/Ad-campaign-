@@ -1,0 +1,63 @@
+:root {color-scheme:dark;--ink:#f7f2ed;--soft:#bbb2bc;--bg:#100f15;--panel:#191622;--line:#352d3d;--accent:#dbfc78;--max:1312px;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+* {box-sizing:border-box;}
+.arhc-public {background:var(--bg);color:var(--ink);margin:0;min-height:100vh;}
+.arhc-public a {color:inherit;}
+.arhc-public a:focus-visible,.arhc-public button:focus-visible {outline:3px solid var(--accent);outline-offset:5px;}
+.public-header,.public-footer {max-width:var(--max);margin:auto;padding:26px 40px;display:flex;align-items:center;justify-content:space-between;gap:24px;}
+.public-header nav,.public-footer nav {display:flex;align-items:center;gap:clamp(12px,3vw,34px);}
+.public-header nav a,.public-footer nav a {text-decoration:none;color:var(--soft);font-size:.92rem;font-weight:650;}
+.public-header nav .nav-signin {color:var(--ink);padding:10px 16px;border:1px solid var(--line);border-radius:12px;}
+.public-header nav a:hover,.public-footer nav a:hover,.text-link:hover {color:var(--accent);}
+.wordmark {display:inline-flex;align-items:baseline;gap:.16em;font-size:1.35rem;font-weight:850;letter-spacing:-.075em;text-decoration:none;white-space:nowrap;}
+.wordmark span {color:var(--accent);font-size:1.16em;}
+.welcome-hero {max-width:var(--max);margin:35px auto 0;padding:0 40px;display:grid;grid-template-columns:.91fr 1.09fr;align-items:stretch;}
+.hero-copy {position:relative;z-index:1;padding:clamp(25px,8vw,96px) 0 clamp(22px,7vw,80px);}
+.kicker {color:var(--accent);font-size:.72rem;font-weight:750;text-transform:uppercase;letter-spacing:.17em;margin:0 0 18px;}
+.hero-copy h1,.public-page h1 {font-size:clamp(3rem,7vw,7rem);letter-spacing:-.088em;line-height:.92;margin:0 0 26px;font-weight:780;}
+.hero-copy em {color:var(--accent);font-style:normal;}
+.hero-copy>p:not(.kicker) {margin:0;max-width:370px;color:var(--soft);font-size:clamp(1rem,1.45vw,1.18rem);line-height:1.65;}
+.public-actions {display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:29px;}
+.solid-link,.outline-link,.text-link {display:inline-flex;justify-content:space-between;align-items:center;gap:14px;text-decoration:none;font-weight:730;font-size:.94rem;border-radius:11px;}
+.arhc-public .solid-link {background:var(--accent);color:#171a12;padding:13px 18px;}
+.solid-link:hover {background:#e9ffa8;}
+.text-link {padding:8px 0;}
+.hero-photo {min-width:0;position:relative;min-height:465px;border-radius:24px;overflow:hidden;background:linear-gradient(135deg,#392343,#1a1726 60%,#453042);}
+.hero-photo img {display:block;width:100%;height:100%;position:absolute;inset:0;object-fit:cover;object-position:54% 42%;}
+.membership-section,.public-page {max-width:var(--max);margin:76px auto 80px;padding:0 40px;}
+.membership-section h2,.public-page h2 {font-size:clamp(2rem,4.2vw,4rem);line-height:1;margin:0 0 25px;letter-spacing:-.055em;}
+.membership-cards,.artist-cards {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;}
+.path-card {display:flex;flex-direction:column;align-items:flex-start;padding:25px;min-height:217px;border:1px solid var(--line);border-radius:18px;background:var(--panel);}
+.path-card--member {background:#22261b;border-color:#454b33;}
+.path-card--artist {background:#271c29;border-color:#4a354d;}
+.path-card h3,.path-card h2 {font-size:1.55rem;line-height:1.2;margin:0 0 8px;letter-spacing:-.035em;}
+.path-card p,.public-page p {color:var(--soft);line-height:1.6;}
+.path-card p {margin:0 0 20px;}
+.outline-link {padding:10px 12px;border:1px solid var(--line);margin-top:auto;}
+.outline-link:hover {border-color:var(--accent);}
+.public-footer {border-top:1px solid var(--line);padding-block:24px;}
+.public-page {margin-top:53px;}
+.public-page h1 {font-size:clamp(3rem,6vw,5.6rem);}
+.artist-detail {max-width:740px;}
+.artist-detail h2 {font-size:clamp(1.7rem,4vw,2.9rem);margin-top:25px;}
+.artist-bio {white-space:pre-wrap;overflow-wrap:anywhere;}
+.genre-tags {display:flex;gap:8px;flex-wrap:wrap;list-style:none;padding:0;}
+.genre-tags li {border:1px solid var(--line);border-radius:100px;padding:5px 10px;color:var(--soft);font-size:.86rem;}
+[hidden] {display:none!important;}
+@media (max-width:900px) {
+  .welcome-hero {grid-template-columns:1fr 1fr;}
+  .hero-photo {min-height:390px;}
+  .hero-copy {padding-block:42px;}
+}
+@media (max-width:680px) {
+  .public-header,.public-footer,.welcome-hero,.membership-section,.public-page {padding-inline:20px;}
+  .public-header {padding-block:17px;gap:12px;}
+  .public-header nav a {font-size:.82rem;}
+  .public-header nav a[href="#membership"] {display:none;}
+  .public-header nav .nav-signin {padding:7px 9px;}
+  .welcome-hero {grid-template-columns:1fr;margin-top:8px;gap:20px;}
+  .hero-copy {padding:22px 0 0;}
+  .hero-photo {min-height:0;aspect-ratio:3/2;border-radius:17px;}
+  .membership-section,.public-page {margin-block:48px;}
+  .membership-cards,.artist-cards {grid-template-columns:1fr;}
+  .path-card {min-height:0;}
+}

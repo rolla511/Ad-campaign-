@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The ARHC | Artist live rooms</title>
+  <link rel="stylesheet" href="/account.css" />
+  <link rel="stylesheet" href="/artist-live.css" />
+  <script type="module" src="/artist-live.js"></script>
+</head>
+<body>
+  <header class="site-header"><a class="brand" href="/">The ARHC<span>Live rooms</span></a><a href="/fan.html">Your account</a></header>
+  <main class="fan-layout live-shell">
+    <h1 id="room-title">Artist live rooms</h1>
+    <p id="live-status" role="status">Checking access…</p>
+    <a id="live-signin" href="/" hidden>Sign in to The ARHC</a>
+
+    <section id="find-room" class="account-card" hidden>
+      <form method="get" action="/artist-live.html">
+        <label>Artist username<input name="artist" minlength="3" maxlength="32" required /></label>
+        <button class="primary" type="submit">Find live room</button>
+      </form>
+    </section>
+
+    <section id="viewer" class="account-card" aria-label="Live player" hidden>
+      <div class="live-actions">
+        <button id="watch-live" type="button" class="primary" disabled>Watch live</button>
+        <button id="leave-live" type="button" class="secondary" hidden>Leave live room</button>
+        <button id="live-audio-toggle" type="button" class="secondary" hidden>Enable audio</button>
+      </div>
+      <div id="live-stage" class="live-stage" hidden></div>
+      <audio id="live-audio" autoplay muted></audio>
+    </section>
+
+    <section id="studio" class="account-card" aria-label="Artist controls" hidden>
+      <p>Sign in with this artist account on each camera device, then connect each camera here.</p>
+      <div class="live-actions">
+        <button id="connect-camera" class="primary" type="button">Connect this camera</button>
+        <button id="disconnect-camera" class="secondary" type="button" hidden>Disconnect this camera</button>
+        <button id="microphone-toggle" class="secondary" type="button" hidden>Enable microphone</button>
+        <button id="end-broadcast" class="secondary" type="button" hidden>End broadcast</button>
+      </div>
+      <div class="studio-preview">
+        <video id="live-preview" autoplay muted playsinline hidden></video>
+        <ol id="camera-slots" class="camera-slots" aria-label="Camera slots"></ol>
+      </div>
+      <form id="layout-form" class="layout-form" hidden>
+        <label>Viewer layout<select name="layout"><option value="grid">Show all cameras</option><option value="rotate">Rotate camera feeds</option></select></label>
+        <label id="rotation-field" hidden>Seconds per camera<input type="number" name="rotationSeconds" min="5" max="60" value="12" required /></label>
+        <button class="primary" type="submit">Save layout</button>
+      </form>
+      <p><a id="viewer-link" href="/artist-live.html">Open your viewer page</a></p>
+    </section>
+
+    <dialog id="end-confirmation" aria-labelledby="end-heading">
+      <form method="dialog"><h2 id="end-heading">End the broadcast?</h2><p>All camera devices and viewers will disconnect.</p>
+        <div class="live-actions"><button class="secondary" value="cancel" autofocus>Keep streaming</button><button class="primary" value="end">End broadcast</button></div>
+      </form>
+    </dialog>
+  </main>
+</body>
+</html>

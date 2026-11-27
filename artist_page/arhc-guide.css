@@ -1,0 +1,40 @@
+.guide-layout {max-width:1160px;}
+.guide-nav {margin:0 0 22px;flex-wrap:wrap;gap:10px 24px;}
+.guide-layout .account-card {margin-bottom:22px;}
+.guide-layout .account-card h2 {margin:0 0 14px;}
+.guide-layout .account-card p {margin-top:0;}
+.guide-help {display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1fr);gap:24px 42px;}
+.guide-answer {grid-column:1/-1;border-left:3px solid var(--green);background:#111d17;padding:18px 20px;border-radius:0 12px 12px 0;overflow-wrap:anywhere;}
+.guide-answer p {white-space:pre-wrap;margin:8px 0 12px!important;}
+.guide-answer:focus {outline:2px solid var(--gold);outline-offset:4px;}
+.guide-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start;}
+.guide-status {margin:0;overflow-wrap:anywhere;}
+.guide-status:empty {display:none;}
+.guide-card-header {display:flex;flex-wrap:wrap;align-items:baseline;gap:12px 24px;justify-content:space-between;}
+.guide-tasks,.guide-matches {padding:0;list-style:none;}
+.guide-tasks li,.guide-matches li {padding:14px 0;border-bottom:1px solid var(--line);}
+.guide-tasks label {font-size:1rem;}
+.guide-tasks label:has(input:checked) {color:var(--muted);}
+.guide-layout progress {width:100%;accent-color:var(--green);}
+.guide-layout #guide-task-count {margin:7px 0 0;font-size:.9rem;}
+.guide-audience dl {margin-bottom:0;}
+.guide-matches h3 {margin:0 0 8px;}
+.guide-matches li>a {display:inline-block;margin-bottom:8px;}
+.guide-matches li p:last-child {margin-bottom:0;}
+#guide-venues {margin-bottom:18px;}
+#guide-outreach-preview {margin-top:18px;}
+#guide-copy-outreach {margin:12px 0;}
+.arhc-public .artist-feedback {max-width:530px;margin:35px 0 0;padding:24px;border:1px solid var(--line);border-radius:18px;background:var(--panel);}
+.artist-feedback h2 {font-size:1.55rem;margin:0 0 12px;}
+.artist-feedback form {display:grid;gap:16px;}
+.artist-feedback label {display:flex;align-items:baseline;gap:10px;font-size:.94rem;}
+.artist-feedback label:first-child {display:grid;}
+.artist-feedback select,.artist-feedback button {font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);padding:10px 14px;border-radius:9px;}
+.artist-feedback input {accent-color:var(--accent);width:17px;height:17px;flex:none;align-self:start;}
+.artist-feedback button {justify-self:start;cursor:pointer;}
+.artist-feedback button:disabled {opacity:.65;cursor:wait;}
+.artist-feedback .guide-status {margin:0;}
+@media (max-width:740px) {
+  .guide-help,.guide-grid {grid-template-columns:1fr;gap:0;}
+  .guide-answer {margin-top:18px;}
+}

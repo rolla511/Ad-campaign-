@@ -1,0 +1,32 @@
+.event-market {max-width:1160px;}
+.event-market .account-card {margin-bottom:22px;}
+.event-market h2,.event-market h3 {margin-top:0;}
+.event-market h2 {margin-bottom:18px;}
+.event-market h3 {margin-bottom:8px;}
+.event-market p {overflow-wrap:anywhere;}
+.event-top,.event-nav {display:flex;align-items:center;flex-wrap:wrap;gap:12px 24px;margin:0 0 20px;}
+.event-top {justify-content:space-between;}
+.event-top p {margin:0;}
+.event-columns {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;}
+.event-items {display:grid;gap:16px;}
+.event-item {padding-bottom:16px;border-bottom:1px solid var(--line);min-width:0;}
+.event-item:last-child {padding-bottom:0;border-bottom:0;}
+.event-item p {margin:8px 0;}
+.event-item .description,.event-item .access-details {white-space:pre-wrap;}
+.event-item .account-actions {margin-top:12px;flex-wrap:wrap;}
+.event-market input,.event-market select {min-width:0;}
+.event-market textarea {min-height:80px;}
+.event-market #event-manage>.event-columns {margin-bottom:30px;}
+.event-market #event-eligible {margin-bottom:28px;}
+.event-activity {margin:0;padding-left:20px;}
+.event-activity li {margin-bottom:10px;}
+.event-activity time {display:block;color:var(--muted);font-size:.88rem;}
+#event-confirm {color:var(--text);width:min(90vw,490px);}
+#event-confirm::backdrop {background:#08150ec9;}
+#event-confirm form {display:flex;}
+#event-confirm h2 {margin-top:0;}
+#event-status:empty {display:none;}
+@media(max-width:760px) {
+  .event-columns {grid-template-columns:1fr;gap:14px;}
+  .event-top,.event-nav {gap:10px 16px;}
+}

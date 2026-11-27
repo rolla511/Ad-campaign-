@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>The ARHC | Coin operations</title>
+  <link rel="stylesheet" href="/account.css" />
+  <link rel="stylesheet" href="/coin-operations.css" />
+  <script type="module" src="/coin-operations.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/coin-operations.html">ARHC<span>AWOBEMEDIA</span></a>
+    <a id="member-account-link" href="/fan.html">Your account</a>
+    <button class="secondary" id="operator-signout" type="button" hidden>Sign out</button>
+  </header>
+  <main class="fan-layout coin-operations">
+    <h1>Coin operations</h1>
+    <p id="access-status" role="status">Checking access…</p>
+    <a href="/join.html?next=coin-operations" id="operator-signin" hidden>Sign in to The ARHC</a>
+    <form id="operator-login" class="account-card operator-login" hidden>
+      <label>Operator username<input name="username" autocomplete="username" maxlength="32" required /></label>
+      <label>Password<input name="password" type="password" autocomplete="current-password" maxlength="128" required /></label>
+      <button class="primary" type="submit">Sign in to coin operations</button>
+    </form>
+    <button class="secondary" id="retry-access" type="button" hidden>Retry access check</button>
+    <div id="operator-workspace" hidden>
+      <section class="account-card" aria-labelledby="locator-heading">
+        <h2 id="locator-heading">Coin locator</h2>
+        <form id="locator-form" class="locator-form">
+          <label for="coin-serial">Coin serial number</label>
+          <div class="locator-controls">
+            <input id="coin-serial" name="serial" pattern="[Ee]?[1-9][0-9]{0,18}" maxlength="20" autocomplete="off" required />
+            <button class="primary" type="submit">Watch coin</button>
+            <button class="secondary" id="stop-watch" type="button" hidden>Stop watching</button>
+          </div>
+        </form>
+        <p id="locator-status" role="status">Enter a serial to see where the coin is now. Artist event serials start with E.</p>
+        <div id="locator-result" hidden>
+          <p id="locator-state" class="locator-state"></p>
+          <dl id="locator-details" class="locator-details"></dl>
+        </div>
+        <p id="locator-checked" class="muted timestamp"></p>
+      </section>
+      <section class="account-card" aria-labelledby="reconcile-heading">
+        <h2 id="reconcile-heading">Storage balance</h2>
+        <p>Compare the coin registry with member wallets, gift credit, redemption reserves, the treasury, and artist event capacity.</p>
+        <button class="secondary" id="run-reconcile" type="button">Run balance check</button>
+        <p id="reconcile-status" role="status"></p>
+        <p id="reconcile-checked" class="muted timestamp"></p>
+        <div id="reconcile-table" class="reconcile-table" role="region" aria-label="Balance differences" tabindex="0" hidden>
+          <table>
+            <thead><tr><th scope="col">Area</th><th scope="col">Coin</th><th scope="col">Reference</th><th scope="col">Difference</th></tr></thead>
+            <tbody id="reconcile-issues"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

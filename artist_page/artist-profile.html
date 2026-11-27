@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The ARHC | Artist page</title>
+  <link rel="stylesheet" href="/site.css" />
+  <link rel="stylesheet" href="/arhc-guide.css" />
+  <script src="/artist-feedback.js" defer></script>
+  <script src="/public-artists.js" defer></script>
+</head>
+<body class="arhc-public" data-artist-view="profile">
+  <header class="public-header"><a class="wordmark" href="/" aria-label="The ARHC home">THE<span>ARHC</span></a><nav aria-label="Main navigation"><a href="/artists.html">Explore artists</a><a class="nav-signin" href="/join.html">Sign in</a></nav></header>
+  <main class="public-page">
+    <p id="artist-status" role="status">Loading artist page…</p>
+    <article id="artist-profile" class="artist-detail" hidden>
+      <p class="kicker" id="artist-handle"></p>
+      <h1 id="artist-name"></h1>
+      <h2 id="artist-headline"></h2>
+      <ul class="genre-tags" id="artist-genres" aria-label="Genres"></ul>
+      <p class="artist-bio" id="artist-bio"></p>
+      <div class="public-actions">
+        <a class="solid-link" id="artist-live-link" href="/artist-live.html">Open member live room</a>
+        <a class="outline-link" id="artist-website" href="/" target="_blank" rel="noopener noreferrer" hidden>Official artist site</a>
+      </div>
+      <section id="artist-feedback" class="artist-feedback" aria-labelledby="feedback-title" hidden>
+        <h2 id="feedback-title">Rate or follow this artist</h2>
+        <p id="feedback-status" class="guide-status" role="status"></p>
+        <a id="feedback-signin" href="/join.html" hidden>Sign in with a fan account</a>
+        <form id="artist-feedback-form" hidden>
+          <label>Your rating<select name="rating">
+            <option value="">No rating</option><option value="1">1 star</option><option value="2">2 stars</option>
+            <option value="3">3 stars</option><option value="4">4 stars</option><option value="5">5 stars</option>
+          </select></label>
+          <label><input name="follows" type="checkbox" /> Follow this artist</label>
+          <label><input name="shareOverlap" type="checkbox" disabled /> Include my follow in aggregate audience matches between artists</label>
+          <button type="submit">Save feedback</button>
+        </form>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ARHC Guide | The ARHC</title>
+  <link rel="stylesheet" href="/account.css" />
+  <link rel="stylesheet" href="/arhc-guide.css" />
+  <script src="/arhc-guide.js" defer></script>
+</head>
+<body>
+  <header class="site-header"><a class="brand" href="/">The ARHC</a><a href="/fan.html">Your account</a></header>
+  <main class="fan-layout guide-layout">
+    <h1>ARHC Guide</h1>
+    <p id="guide-status" role="status">Loading your guide…</p>
+    <a id="guide-signin" href="/join.html?next=guide" hidden>Sign in to open your guide</a>
+    <div id="guide-content" hidden>
+      <nav id="guide-nav" class="account-actions guide-nav" aria-label="Guide topics" hidden>
+        <a href="#help">App and site help</a>
+        <a href="#artist-guide">Artist goals</a>
+        <a href="#audience">Audience</a>
+        <a href="#collaborations">Collaboration updates</a>
+        <a href="#venues">Find venues</a>
+      </nav>
+      <section id="help" class="account-card guide-help" aria-labelledby="help-title">
+        <div>
+          <h2 id="help-title">Ask for help</h2>
+          <p>Get help with your account, coins, artist pages, and live rooms.</p>
+          <p id="guide-artist-help" hidden>Artists can also ask for ideas on their next release, live show, or collaboration.</p>
+          <p><a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">Open your own ChatGPT account</a></p>
+        </div>
+        <form id="guide-ask">
+          <label>Topic<select name="topic"><option value="">Choose from my question</option></select></label>
+          <label>Your question<textarea name="question" rows="3" maxlength="600" placeholder="How do I check what’s left on an artist’s wishlist?"></textarea></label>
+          <label id="ai-choice" class="checkbox" hidden><input name="useAI" type="checkbox" /><span>Use AI for this question. Your question goes to OpenAI. Leave out passwords, payment details, and private information.</span></label>
+          <p id="ai-allowance" class="muted guide-status" hidden></p>
+          <button class="primary" type="submit">Get help</button>
+          <p id="guide-ask-status" class="guide-status" role="status"></p>
+        </form>
+        <div id="guide-answer" class="guide-answer" role="region" aria-label="Guide answer" tabindex="-1" hidden>
+          <strong id="guide-answer-source"></strong>
+          <p id="guide-answer-text"></p>
+          <ol id="guide-answer-steps" hidden></ol>
+          <div class="account-actions">
+            <a id="guide-answer-link" href="/fan.html"></a>
+            <button id="guide-review-action" class="secondary" type="button" hidden></button>
+          </div>
+        </div>
+      </section>
+      <div id="artist-guide" hidden>
+        <section class="account-card" aria-labelledby="next-title">
+          <h2 id="next-title">What to do next</h2>
+          <p id="guide-next">Choose a focus to get your first step.</p>
+          <div class="account-actions guide-nav">
+            <a id="guide-next-link" href="#guide-plan" hidden></a>
+            <button id="guide-next-done" class="secondary" type="button" hidden>Mark this step complete</button>
+          </div>
+          <p id="guide-next-status" class="guide-status" role="status"></p>
+        </section>
+        <div class="guide-grid">
+          <section class="account-card" aria-labelledby="goal-title">
+            <h2 id="goal-title">What are you working toward?</h2>
+            <form id="guide-plan">
+              <label>Focus<select name="focus" required><option value="">Choose a focus</option></select></label>
+              <label>Your goal<textarea name="goal" rows="3" maxlength="400" required placeholder="Choose a focus to get a suggested goal."></textarea></label>
+              <label>Time zone<input name="timeZone" maxlength="100" required placeholder="America/New_York" /><small>The checklist changes at midnight in this time zone.</small></label>
+              <label>Open to collaboration<select name="collaborationType"><option value="">Off</option></select><small>With a published artist page, you can appear in guide suggestions for other opted-in artists.</small></label>
+              <button class="primary" type="submit">Save artist plan</button>
+              <p id="guide-plan-status" class="guide-status" role="status"></p>
+            </form>
+          </section>
+          <section class="account-card" aria-labelledby="task-title">
+            <h2 id="task-title">Daily checklist</h2>
+            <p id="guide-task-day" class="muted">Save a goal to get today’s tasks.</p>
+            <progress id="guide-task-progress" aria-label="Daily tasks completed" hidden></progress>
+            <p id="guide-task-count" class="muted" hidden></p>
+            <ul id="guide-tasks" class="guide-tasks"></ul>
+            <p id="guide-task-status" class="guide-status" role="status"></p>
+          </section>
+        </div>
+        <section id="audience" class="account-card guide-audience" aria-labelledby="audience-title">
+          <h2 id="audience-title">Fan ratings and engagement</h2>
+          <p class="muted">Ratings and follows appear once at least five eligible fans have participated in each measure.</p>
+          <dl id="guide-audience-metrics"></dl>
+        </section>
+        <section id="collaborations" class="account-card" aria-labelledby="collaborations-title">
+          <div class="guide-card-header">
+            <h2 id="collaborations-title">Collaboration updates</h2>
+            <button id="guide-refresh" class="secondary" type="button">Refresh</button>
+          </div>
+          <p class="muted">Suggestions use published genres, collaboration preferences, and shared follows from fans who opted in on both artist pages.</p>
+          <p id="guide-match-status" role="status"></p>
+          <ul id="guide-matches" class="guide-matches"></ul>
+          <p><a href="/artist-setup.html">Manage your artist page</a></p>
+        </section>
+        <section id="venues" class="account-card" aria-labelledby="venues-title">
+          <h2 id="venues-title">Find venues for your work</h2>
+          <p class="muted">Search for places to perform or show your work in person. Check each venue’s website for current booking or submission details.</p>
+          <form id="guide-venues">
+            <label>City or area<input name="city" placeholder="Brooklyn, NY" maxlength="100" required /></label>
+            <label>What are you looking for?<select name="format">
+              <option value="music">Live music or a showcase</option>
+              <option value="open-mic">Open mic or spoken word</option>
+              <option value="exhibit">An exhibit or pop-up</option>
+            </select></label>
+            <button class="primary" type="submit">Find places to look</button>
+          </form>
+          <p id="guide-venue-status" class="guide-status" role="status"></p>
+          <ul id="guide-venue-results" class="guide-matches"></ul>
+        </section>
+        <section id="outreach" class="account-card" aria-labelledby="outreach-title">
+          <h2 id="outreach-title">Prepare an outreach draft</h2>
+          <form id="guide-outreach">
+            <label>Draft type<select name="kind">
+              <option value="performance">Ask a venue about performing</option>
+              <option value="exhibit">Ask a gallery or venue about exhibiting</option>
+              <option value="collab">Pitch a collaboration</option>
+            </select></label>
+            <label>Venue or artist name <small>Optional</small><input name="recipient" maxlength="100" /></label>
+            <button class="primary" type="submit">Prepare a draft</button>
+          </form>
+          <div id="guide-outreach-preview" hidden>
+            <label>Edit your draft<textarea id="guide-outreach-text" rows="9"></textarea></label>
+            <button id="guide-copy-outreach" class="secondary" type="button">Copy draft</button>
+            <p id="guide-outreach-status" class="guide-status" role="status"></p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

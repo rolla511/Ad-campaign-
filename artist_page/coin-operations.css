@@ -1,0 +1,23 @@
+.coin-operations {max-width: 1040px; margin-top: 4px;}
+.coin-operations h1 {margin-top: 10px;}
+.coin-operations h2 {margin: 0 0 18px;}
+.operator-login {max-width: 430px;}
+.coin-operations .account-card + .account-card {margin-top: 22px;}
+.locator-form {gap: 8px;}
+.locator-controls {display: flex; flex-wrap: wrap; gap: 10px;}
+.locator-controls input {flex: 1 1 13rem; width: auto; min-width: 0; max-width: 24rem;}
+.locator-state {color: var(--green); font-size: 20px; font-weight: 700; margin-bottom: 10px;}
+.locator-details {grid-template-columns: minmax(0, 11rem) minmax(0, 1fr); gap: 9px 18px;}
+.locator-details dd, .reconcile-table td {font-variant-numeric: tabular-nums; overflow-wrap: anywhere;}
+.timestamp {font-size: 13px; margin-bottom: 0;}
+.timestamp:empty, #reconcile-status:empty, #access-status:empty {display: none;}
+.reconcile-table {margin-top: 16px; overflow: auto;}
+.reconcile-table table {width: 100%; min-width: 540px; border-collapse: collapse; font-size: 14px; text-align: left;}
+.reconcile-table th, .reconcile-table td {border-bottom: 1px solid var(--line); padding: 12px 10px; vertical-align: top;}
+.reconcile-table th {color: var(--muted);}
+.reconcile-table ul {margin: 0; padding-left: 1rem;}
+@media (max-width: 540px) {
+  .locator-controls input {flex-basis: 100%; max-width: none;}
+  .locator-details {grid-template-columns: minmax(0, 1fr); gap: 3px;}
+  .locator-details dd {margin-bottom: 8px;}
+}

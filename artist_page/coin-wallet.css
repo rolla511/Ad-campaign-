@@ -1,0 +1,17 @@
+.wallet-balances {grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: 12px;}
+.wallet-balance {padding: 14px; background: #132019; border: 1px solid var(--line); border-radius: 12px;}
+.wallet-balance dd {font-size: 1.25rem; font-weight: 730; margin-top: 7px; font-variant-numeric: tabular-nums;}
+.wallet-history {border-block: 1px solid var(--line); padding: 14px 0; margin: 22px 0;}
+.wallet-history summary {font-weight: 700; cursor: pointer;}
+.wallet-table {overflow: auto;}
+.wallet-table table {width: 100%; min-width: 28rem; border-collapse: collapse; font-size: 14px;}
+.wallet-table th, .wallet-table td {padding: 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top;}
+.wallet-table td {font-variant-numeric: tabular-nums;}
+.purchase-history {padding-left: 1.2rem; line-height: 1.7;}
+#coin-purchase-estimate, #coin-purchase-price, #selected-gift-balance {margin: 0;}
+.wallet-gifts {grid-column: 1 / -1; border-top: 1px solid var(--line); margin-top: 24px; padding-top: 5px;}
+.wishlist-grid {display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: 12px; margin: 15px 0 20px;}
+.wishlist-grid .market-item {display: grid; align-content: start; gap: 8px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: #132019;}
+.wishlist-grid p {margin: 0;}
+.wishlist-grid progress {width: 100%; accent-color: var(--green);}
+.wishlist-grid button {justify-self: start; margin-top: 3px;}

@@ -1,326 +1,63 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Robbie Rolla | The ARHC Artist Page</title>
-    <meta name="arhc-api-base" content="https://the-arhc.onrender.com/api" />
-    <link rel="stylesheet" href="./style.css" />
-  </head>
-  <body>
-    <img class="analytics-pixel" alt="" src="https://the-arhc.onrender.com/api/public/analytics/pixel?artistSlug=robbie-rolla&artistName=Robbie%20Rolla&action=page.server_viewed&targetType=page&targetId=artist-page&targetTitle=Robbie%20Rolla%20Artist%20Page" />
-    <nav class="bottom-jump-nav" aria-label="Quick page jumps">
-      <a href="./home.html">Home</a>
-      <a href="#live">Live</a>
-      <a href="#music">Music</a>
-      <a href="#playlists">Playlists</a>
-      <a href="#fans">Fans</a>
-      <a href="#support-title">Support</a>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Discover independent artists, find live rooms, and support the music you love on The ARHC." />
+  <title>The ARHC | Get closer to the music</title>
+  <link rel="stylesheet" href="/site.css" />
+</head>
+<body class="arhc-public">
+  <header class="public-header">
+    <a class="wordmark" href="/" aria-label="The ARHC home">THE<span>ARHC</span></a>
+    <nav aria-label="Main navigation">
+      <a href="/artists.html">Explore artists</a>
+      <a href="#membership">Membership</a>
+      <a class="nav-signin" href="/join.html">Sign in</a>
     </nav>
-    <main class="artist-page">
-      <section class="artist-hero" aria-labelledby="artist-title">
-        <img src="./assets/robbie-rolla-live.png" alt="Robbie Rolla artist page live studio backdrop" />
-        <div class="hero-overlay">
-          <nav class="artist-nav" aria-label="Artist page">
-            <a href="./home.html">Home</a>
-            <a href="#live">Live</a>
-            <a href="#music">Music</a>
-            <a href="#playlists">Playlists</a>
-            <a href="#fans">Fans</a>
-            <a class="artist-admin-link" href="#artist-dashboard" hidden>Stats</a>
-            <a class="artist-admin-link" href="#artist-upload" hidden>Upload</a>
-          </nav>
-          <div class="hero-content">
-            <p class="eyebrow">Featured ARHC artist</p>
-            <h1 id="artist-title">Robbie Rolla</h1>
-            <p class="artist-line">The ARHC presents Robbie Rolla: music, live moments, fan messages, direct support, and $1.99 song downloads sold separately.</p>
-            <div class="hero-actions">
-              <a class="primary-action" href="#live">Watch Live</a>
-              <a class="secondary-action" href="#music">Buy Downloads</a>
-            </div>
-            <div class="hero-tags" aria-label="Robbie Rolla fan signals">
-              <span>The ARHC</span>
-              <span>Robbie Rolla</span>
-              <span>We Belong</span>
-              <span>for wishing</span>
-              <span>Black Light</span>
-              <span>Street soul</span>
-            </div>
-          </div>
-          <aside class="live-card" aria-label="Current live session">
-            <span class="live-dot"></span>
-            <div>
-              <strong>Studio Room</strong>
-              <small id="live-room-status">Viewer room open</small>
-            </div>
-          </aside>
-        </div>
-      </section>
+  </header>
 
-      <section class="pulse-section" aria-labelledby="pulse-title">
-        <div class="pulse-copy">
-          <p class="eyebrow">Artist signal</p>
-          <h2 id="pulse-title">Robbie Rolla moves in more than one lane.</h2>
-          <p>Music, visuals, live presence, and fan support all point back to one artist identity.</p>
+  <main id="main">
+    <section class="welcome-hero" aria-labelledby="hero-heading">
+      <div class="hero-copy">
+        <p class="kicker">Independent music. Real connections.</p>
+        <h1 id="hero-heading">Get closer to<br />the <em>music.</em></h1>
+        <p>Discover independent artists, step into their live rooms, and support the work you want to hear more of.</p>
+        <div class="public-actions">
+          <a class="solid-link" href="#membership">Join The ARHC</a>
+          <a class="text-link" href="/artists.html">Explore artists <span aria-hidden="true">↗</span></a>
         </div>
-        <div class="pulse-grid" aria-label="Fan base dimensions">
-          <article class="pulse-card green">
-            <span>Sound</span>
-            <strong>Hook first</strong>
-            <small>Public streams place the record before the pitch.</small>
-          </article>
-          <article class="pulse-card gold">
-            <span>Image</span>
-            <strong>Recognizable</strong>
-            <small>Cover, live, and video assets repeat the artist imprint.</small>
-          </article>
-          <article class="pulse-card coral">
-            <span>Access</span>
-            <strong>Close room</strong>
-            <small>Live camera energy turns viewers into return visitors.</small>
-          </article>
-          <article class="pulse-card blue">
-            <span>Support</span>
-            <strong>Direct value</strong>
-            <small>Downloads and tips make support feel immediate.</small>
-          </article>
-        </div>
-      </section>
+      </div>
+      <div class="hero-photo">
+        <img src="/assets/arhc/home/studio-hero.jpg" alt="A vocalist wearing headphones beside a studio microphone" width="1536" height="1024" fetchpriority="high" />
+      </div>
+    </section>
 
-      <section id="live" class="live-section" aria-labelledby="live-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Live stream</p>
-            <h2 id="live-title">Live Room And Fan Message Board</h2>
-          </div>
-          <span id="stream-access-pill">Public room</span>
-        </div>
+    <section class="membership-section" id="membership" aria-labelledby="membership-title">
+      <h2 id="membership-title">Find your place.</h2>
+      <div class="membership-cards">
+        <article class="path-card">
+          <h3>Free fan</h3>
+          <p>Explore public artist pages and create a fan profile that lasts seven days.</p>
+          <a class="outline-link" href="/join.html?path=free-fan">Start free <span aria-hidden="true">↗</span></a>
+        </article>
+        <article class="path-card path-card--member">
+          <h3>Paid fan</h3>
+          <p>Keep your profile, join member live rooms, and support artists through the wallet and wishlists.</p>
+          <a class="outline-link" href="/join.html?path=paid-fan">Join as a paid fan <span aria-hidden="true">↗</span></a>
+        </article>
+        <article class="path-card path-card--artist">
+          <h3>Artist</h3>
+          <p>Build an artist page. Publish it and open your live studio with an active paid membership.</p>
+          <a class="outline-link" href="/join.html?path=artist">Set up as an artist <span aria-hidden="true">↗</span></a>
+        </article>
+      </div>
+    </section>
+  </main>
 
-        <div class="live-grid">
-          <div class="stream-stage">
-            <video id="artist-camera" autoplay playsinline muted poster="./assets/robbie-rolla-live.png"></video>
-            <div id="camera-placeholder" class="camera-placeholder">
-              <strong>Robbie Rolla Live</strong>
-              <span>Fans can watch, listen, and send love from the room.</span>
-            </div>
-            <div class="stream-controls artist-only" aria-label="Artist live stream controls" hidden>
-              <button id="start-live" type="button">Start Camera</button>
-              <button id="toggle-video" type="button" disabled>Camera On</button>
-              <button id="toggle-audio" type="button" disabled>Mic On</button>
-              <button id="stop-live" type="button" disabled>Stop</button>
-            </div>
-            <div class="viewer-live-note">Robbie Rolla controls the broadcast. Fans enter as viewers.</div>
-          </div>
-
-          <aside id="fans" class="fan-panel" aria-labelledby="fan-panel-title">
-            <div class="fan-panel-header">
-              <div>
-                <p class="eyebrow">Fan interaction</p>
-                <h3 id="fan-panel-title">Robbie Rolla Message Board</h3>
-              </div>
-              <span id="fan-count">128 fans</span>
-            </div>
-            <div id="chat-list" class="chat-list" aria-live="polite"></div>
-            <form id="chat-form" class="chat-form">
-              <input name="fanName" aria-label="Fan name" placeholder="Fan name" value="Sky Listener" />
-              <input name="message" aria-label="Live message" placeholder="Message Robbie Rolla or request a song" required />
-              <button type="submit">Send</button>
-            </form>
-          </aside>
-        </div>
-      </section>
-
-      <section class="fan-path-section" aria-labelledby="fan-path-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Fan lanes</p>
-            <h2 id="fan-path-title">Built For Different Reasons To Stay</h2>
-          </div>
-          <span>Public viewer flow</span>
-        </div>
-        <div class="fan-path-grid">
-          <a class="fan-path" href="#music" data-fan-path="listener">
-            <span>Listener</span>
-            <strong>Starts with the record</strong>
-            <small>Stream first, then download the part that sticks.</small>
-          </a>
-          <a class="fan-path" href="#video-title" data-fan-path="visual-fan">
-            <span>Visual fan</span>
-            <strong>Finds the image</strong>
-            <small>Rotating video previews invite a full watch.</small>
-          </a>
-          <a class="fan-path" href="#live" data-fan-path="room-energy">
-            <span>Room energy</span>
-            <strong>Looks for presence</strong>
-            <small>Live status and chat keep the artist page active.</small>
-          </a>
-          <a class="fan-path" href="#support-title" data-fan-path="supporter">
-            <span>Supporter</span>
-            <strong>Wants to back it</strong>
-            <small>PayPal downloads and tips turn attention into action.</small>
-          </a>
-        </div>
-      </section>
-
-      <section id="music" class="music-section" aria-labelledby="music-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Music downloads</p>
-            <h2 id="music-title">Robbie Rolla Songs - $1.99 Each</h2>
-          </div>
-          <span>Sold separately</span>
-        </div>
-        <div class="commerce-note">
-          <strong>PayPal download purchase</strong>
-          <span>Each title is purchased separately for $1.99. Streaming remains open; downloads are released after checkout.</span>
-        </div>
-        <div id="now-playing" class="now-playing" aria-live="polite"></div>
-        <div id="track-grid" class="track-grid"></div>
-      </section>
-
-      <section id="artist-dashboard" class="artist-dashboard" aria-labelledby="artist-dashboard-title" hidden>
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Artist dashboard</p>
-            <h2 id="artist-dashboard-title">Views, Streams, And Visibility</h2>
-          </div>
-          <span>Robbie Rolla only</span>
-        </div>
-        <div id="artist-stats-grid" class="artist-stats-grid"></div>
-      </section>
-
-      <section id="artist-upload" class="artist-upload-section" aria-labelledby="artist-upload-title" hidden>
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Artist upload</p>
-            <h2 id="artist-upload-title">Add Audio</h2>
-          </div>
-          <span>ISRC required</span>
-        </div>
-        <form id="artist-upload-form" class="artist-upload-form">
-          <label>
-            Upload type
-            <select name="uploadType">
-              <option value="single">Single song</option>
-              <option value="album">Album, volume, or series</option>
-            </select>
-          </label>
-          <label>
-            Album, volume, or series name
-            <input name="albumTitle" placeholder="Optional for singles" />
-          </label>
-          <label>
-            Existing album ISRC
-            <input name="albumIsrc" placeholder="Optional collection reference" />
-          </label>
-          <label>
-            Song title
-            <input name="title" required placeholder="Song title" />
-          </label>
-          <label>
-            Existing ISRC
-            <input name="isrc" placeholder="Leave blank for The ARHC to assign one" />
-          </label>
-          <label>
-            MP3 audio
-            <input name="audio" type="file" accept="audio/mpeg,.mp3" multiple required />
-          </label>
-          <button type="submit">Upload Audio</button>
-        </form>
-        <div id="artist-upload-status" class="payment-status" role="status">Each audio file gets its own ISRC. Album, volume, and series uploads can also carry one collection reference.</div>
-      </section>
-
-      <section id="playlists" class="playlist-section" aria-labelledby="playlist-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Playlists</p>
-            <h2 id="playlist-title">Artist And Fan Playlists</h2>
-          </div>
-          <span>Pick a lane</span>
-        </div>
-        <div id="playlist-grid" class="playlist-grid"></div>
-      </section>
-
-      <section class="promo-section" aria-labelledby="promo-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Featured links</p>
-            <h2 id="promo-title">Where Robbie Rolla's Music Can Be Found</h2>
-          </div>
-          <span>Artist promotion</span>
-        </div>
-        <div id="promo-grid" class="promo-grid"></div>
-      </section>
-
-      <section class="image-section" aria-labelledby="image-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Artist images</p>
-            <h2 id="image-title">Featured Visuals</h2>
-          </div>
-          <span>Hero, cover, live</span>
-        </div>
-        <div id="image-grid" class="image-grid"></div>
-      </section>
-
-      <section class="video-section" aria-labelledby="video-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Artist video</p>
-            <h2 id="video-title">Featured Video</h2>
-          </div>
-          <span>Public viewing</span>
-        </div>
-        <div id="video-grid" class="video-grid"></div>
-      </section>
-
-      <section class="bitcoin-section" aria-labelledby="bitcoin-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">The ARHC fan coin</p>
-            <h2 id="bitcoin-title">Support Robbie Rolla</h2>
-          </div>
-          <span>Fan support</span>
-        </div>
-        <div class="bitcoin-grid">
-          <article class="bitcoin-card">
-            <span>Step 1</span>
-            <strong>Fan supports Robbie Rolla</strong>
-            <small>Support helps move the music, visuals, and live room forward.</small>
-          </article>
-          <article class="bitcoin-card">
-            <span>Step 2</span>
-            <strong>Artist access route</strong>
-            <small>Fans can follow the artist access path as The ARHC opens more features.</small>
-          </article>
-          <article class="bitcoin-card">
-            <span>Step 3</span>
-            <strong>PayPal remains the real payment rail</strong>
-            <small>Donations and downloads are handled through PayPal checkout.</small>
-          </article>
-        </div>
-      </section>
-
-      <section class="support-section" aria-labelledby="support-title">
-        <div>
-          <p class="eyebrow">Support Robbie Rolla</p>
-          <h2 id="support-title">PayPal Donations And Fan Support</h2>
-        </div>
-        <form id="support-form" class="support-form">
-          <label>
-            Support amount
-            <input name="amount" type="number" min="1" step="1" value="5" />
-          </label>
-          <label>
-            Contact email
-            <input name="email" type="email" placeholder="fan@example.com" required />
-          </label>
-          <button type="submit">Open PayPal Donation</button>
-        </form>
-        <div id="payment-status" class="payment-status" role="status">Robbie Rolla downloads are $1.99 per title. Donations and downloads open through PayPal checkout.</div>
-      </section>
-    </main>
-
-    <script src="./app.js"></script>
-  </body>
+  <footer class="public-footer">
+    <a class="wordmark" href="/">THE<span>ARHC</span></a>
+    <nav aria-label="Footer"><a href="/artists.html">Artists</a><a href="/account-terms.html">Membership terms</a></nav>
+  </footer>
+</body>
 </html>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The ARHC | Set up your artist page</title>
+  <link rel="stylesheet" href="/account.css" />
+  <script src="/artist-setup.js" defer></script>
+</head>
+<body>
+  <header class="site-header"><a class="brand" href="/">The ARHC</a><nav class="account-actions" aria-label="Artist navigation"><a href="/arhc-guide.html">ARHC Guide</a><a href="/event-market.html#event-manage">Event market</a><a href="/fan.html">Your account</a></nav></header>
+  <main class="fan-layout">
+    <h1>Set up your artist page</h1>
+    <p id="editor-status" role="status">Loading your artist page…</p>
+    <a id="editor-signin" href="/join.html?next=artist-setup" hidden>Sign in with an artist account</a>
+    <div class="profile-grid" id="artist-editor" hidden>
+      <section class="account-card" aria-label="Edit artist page">
+        <form id="artist-page-form">
+          <label>Headline<input name="headline" maxlength="100" placeholder="Describe your sound in one line" /></label>
+          <label>Artist bio<textarea name="bio" rows="7" maxlength="1200"></textarea></label>
+          <label>Genres<input name="genres" maxlength="170" placeholder="Soul, hip-hop, R&amp;B" /><small>Separate up to five genres with commas.</small></label>
+          <label>Official link<input name="website" type="url" maxlength="300" placeholder="https://" /></label>
+          <div class="account-actions">
+            <button class="secondary" type="submit" name="save">Save draft</button>
+            <button class="primary" type="submit" name="publish">Publish page</button>
+          </div>
+        </form>
+      </section>
+      <section class="account-card" aria-labelledby="page-visibility">
+        <h2 id="page-visibility">Page visibility</h2>
+        <p id="page-visibility-status"></p>
+        <p>Saving a draft keeps your edits private. Publish when you’re ready to share them.</p>
+        <p id="editor-membership" hidden><a href="/fan.html#membership-panel">Activate paid artist membership</a> to publish and stream.</p>
+        <p><a id="artist-published-link" href="/artists.html" hidden>View your public page</a></p>
+        <button id="unpublish-page" class="secondary" type="button" hidden>Unpublish page</button>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

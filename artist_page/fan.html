@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>The ARHC | Your profile</title><link rel="stylesheet" href="/account.css" /><link rel="stylesheet" href="/coin-wallet.css" /><script src="/fan-account.js" defer></script><script src="/coin-account.js" defer></script></head>
+<body>
+  <header class="site-header"><a class="brand" href="/">The ARHC<span>Your community profile</span></a><div class="account-actions"><a href="/artist-page.html">Explore free content</a><button id="signout" class="secondary" type="button">Sign out</button></div></header>
+  <main class="fan-layout">
+    <p id="page-status" role="status" aria-live="polite">Loading your account…</p>
+    <div id="account-content" hidden>
+      <p class="eyebrow">Your account</p><h1 id="welcome">Welcome</h1><p id="retention-message"></p>
+      <p class="account-actions"><a href="/arhc-guide.html">ARHC Guide</a><a href="/artist-live.html">Find artist live rooms</a><a id="artist-page-setup-link" href="/artist-setup.html" hidden>Set up your artist page</a><a id="artist-studio-link" href="/artist-live.html?studio=1" hidden>Open your live studio</a></p>
+      <div class="profile-grid">
+        <section id="profile-panel" class="account-card"><span id="tier-badge" class="badge"></span><h2>Your profile</h2><p id="profile-status" role="status" aria-live="polite"></p>
+          <form id="profile-form"><label>Display name<input name="displayName" maxlength="80" required /></label><label>Favorite genres<input name="favoriteGenres" maxlength="200" placeholder="Soul, hip-hop, jazz…" /></label><label>About you<textarea name="bio" maxlength="1000"></textarea></label><button class="primary" type="submit">Save profile</button></form>
+        </section>
+        <div>
+          <section class="account-card"><h2>Account details</h2><dl><dt>Username</dt><dd id="username"></dd><dt>Account type</dt><dd id="role"></dd><dt>Standing</dt><dd id="standing"></dd><dt>Membership</dt><dd id="membership-state"></dd><dt id="expiry-label">Free profile expires</dt><dd id="expiry"></dd></dl></section>
+          <section id="membership-panel" class="account-card"><h2>Membership</h2><p id="membership-description"></p><p id="checkout-status" role="status" aria-live="polite"></p>
+            <form id="membership-form"><label>Period<select name="period"><option value="month">Month to month</option><option value="week">Weekly</option></select></label><p id="membership-price" class="muted"></p><button id="checkout-button" class="primary" type="submit">Continue to membership payment</button></form>
+          </section>
+          <section class="account-card"><h2>Lion and Crown · Bird and Bee</h2><p id="coin-status"></p><p>Fans buy Lion and Crown from ARC. Artists buy Bird and Bee inventory and offer it with their content or interactions. After the trade, Bird and Bee is non-refundable gift/reward store credit worth half the original Lion and Crown value.</p><p class="muted">Platform gifts use the venue value shown in the catalog. Spent Bird and Bee returns to ARC for recirculation.</p></section>
+        </div>
+      </div>
+      <section class="account-card" id="coin-wallet" hidden>
+        <p class="eyebrow">Member market</p><h2>Your coins and artist gifts</h2><div class="account-actions"><button id="refresh-wallet" type="button" class="secondary">Refresh balances</button><a href="/event-market.html">Artist Event Market and wallet alerts</a></div><p id="wallet-status" role="status" aria-live="polite"></p>
+        <dl id="wallet-balances" class="wallet-balances"></dl>
+        <details class="wallet-history"><summary>Wallet growth and purchase history</summary>
+          <p class="muted">See how purchases, artist trades, and gifts changed your balances. Potential gift credit depends on the original coin purchase value and an eligible artist trade.</p>
+          <h3>Recent balance changes</h3><p id="wallet-growth-empty" class="muted"></p>
+          <div id="wallet-growth-table" class="wallet-table" role="region" aria-label="Wallet balance history" tabindex="0" hidden>
+            <table><thead><tr><th scope="col">Activity</th><th scope="col">Original purchase value held</th><th scope="col">Gift credit</th><th scope="col" class="artist-wallet-column">Eligible artist conversion</th></tr></thead><tbody id="wallet-growth"></tbody></table>
+          </div>
+          <h3>Verified purchases</h3><ul id="wallet-purchases" class="purchase-history"></ul>
+        </details>
+        <div class="profile-grid">
+          <section><h3>Purchase from ARC</h3><form id="coin-purchase-form"><label>Coin<select name="coin"><option value="lion_crown">Lion and Crown</option><option value="bird_bee">Bird and Bee · artist inventory</option></select></label><label>Quantity<input name="quantity" type="number" min="1" max="1000000" value="10" required /></label><p id="coin-purchase-price"></p><p id="coin-purchase-estimate" class="muted" hidden></p><button class="primary" type="submit">Continue to payment</button></form></section>
+          <section id="artist-offer-section" hidden><h3>Offer your content or time</h3><form id="artist-offer-form"><label>Offer title<input name="title" maxlength="120" required /></label><label>Artist benefit<select name="benefitType"><option value="content">Content</option><option value="messages">Messages</option><option value="stream_time">Streaming time</option><option value="personal_stream">Personal stream</option><option value="studio_session">Interactive studio session</option></select></label><label>What the fan receives<textarea name="benefitDescription" maxlength="1000" required></textarea></label><label>Lion and Crown requested<input name="lionQuantity" type="number" min="1" max="1000000" value="1" required /></label><label>Bird and Bee given to fan<input name="birdQuantity" type="number" min="1" max="1000000" value="1" required /></label><button class="primary" type="submit">Publish artist offer</button></form></section>
+        </div>
+        <h3>Artist offers</h3><p class="muted">Choose the artist's content or interaction offer. Received Bird and Bee becomes gift-only store credit; it cannot be refunded for cash.</p><div id="artist-market-offers" class="market-list"></div>
+        <div class="profile-grid">
+          <section class="wallet-gifts" aria-labelledby="wishlists-title"><h3 id="wishlists-title">Artist wishlists</h3><p>Use your Bird and Bee gift credit to help fund a gift an artist selected.</p><div id="artist-gift-goals" class="market-list wishlist-grid"></div><form id="artist-gift-form"><label>Artist wishlist gift<select name="goalId" required></select></label><label>Your store-credit contribution (USD value)<input name="amount" type="number" min="0.01" step="0.01" required /></label><p id="selected-gift-balance" class="muted"></p><button class="primary" type="submit">Contribute store credit</button></form></section>
+          <section id="redemption-section" hidden><h3>Artist cash conversion</h3><form id="coin-redemption-form"><label>Received Lion and Crown to convert<input name="quantity" type="number" min="1" max="1000000" value="1" required /></label><label class="checkbox"><input name="acceptHalfValue" type="checkbox" required /><span>I accept conversion at half these coins' original value. A request reserves the coins; cash is paid only after review and payout.</span></label><button class="primary" type="submit">Request cash conversion</button></form></section>
+        </div>
+        <section id="artist-wishlist-section" hidden><h3>Select your gifts from the platform catalog</h3><p>Choose the platform's available rewards and venue values for your wishlist. Fans can pool their appreciation toward your selected gifts.</p><form id="artist-wishlist-form"><label>Platform gift / reward<select name="rewardId" required></select></label><button class="primary" type="submit">Add to my wishlist</button></form></section>
+        <h3>Gifts and conversion requests</h3><div id="coin-activity" class="market-list"></div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

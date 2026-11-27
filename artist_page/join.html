@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>The ARHC | Sign in or join</title><link rel="stylesheet" href="/account.css" /><script src="/entry.js" defer></script></head>
+<body><header class="site-header"><a class="brand" href="/">The ARHC<span>Artists. Community. Connection.</span></a><a href="/artists.html">Browse artists</a></header>
+<main class="entry-layout"><section class="intro"><p class="eyebrow">Your place in the community</p><h1>The music brings us together.<br />Make yourself at home.</h1><p>Sign in to your own profile, discover artists, and keep your interests in one place.</p><div class="intro-note"><strong>Start with a free fan account.</strong><p>Your free profile lasts seven days from signup. Paid members keep a lasting profile and can continue signing in while their account is in good standing.</p></div><p class="muted">Visitors can explore content artists mark free. Coin participation is reserved for eligible active members.</p></section>
+<section class="account-card" aria-labelledby="form-title"><div class="switcher"><button id="show-signin" class="selected" type="button" aria-pressed="true">Sign in</button><button id="show-signup" type="button" aria-pressed="false">Create account</button></div><h2 id="form-title">Welcome back</h2><p id="form-status" role="status" aria-live="polite"></p>
+<form id="signin-form"><label>Username<input name="username" autocomplete="username" required maxlength="32" /></label><label>Password<input name="password" type="password" autocomplete="current-password" required maxlength="128" /></label><button class="primary" type="submit">Sign in</button></form>
+<form id="signup-form" hidden>
+<label>Account type<select name="role"><option value="fan">Fan / listener</option><option value="artist">Artist</option></select></label>
+<label>Display name<input name="displayName" autocomplete="nickname" required maxlength="80" /></label>
+<label>Username<input name="username" autocomplete="username" required minlength="3" maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_\-]{2,31}" aria-describedby="username-help" /><small id="username-help">3–32 letters, numbers, underscores, or hyphens. Usernames are unique regardless of capitalization.</small></label>
+<label>Email<input name="email" type="email" autocomplete="email" required maxlength="254" /></label>
+<label>Password<input name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="128" /><small>Use at least 12 characters.</small></label>
+<label>Confirm password<input name="passwordConfirm" type="password" autocomplete="new-password" required minlength="12" maxlength="128" /></label>
+<label>Membership<select name="tier"><option value="free">Free fan account · seven days</option><option value="paid">Paid membership · lasting profile</option></select></label>
+<label id="period-field" hidden>Membership period<select name="period"><option value="month">Month to month</option><option value="week">Weekly</option></select></label>
+<p id="membership-note" class="muted">Free account data is deleted seven days after signup. Signing in does not extend that period.</p>
+<label class="checkbox"><input name="termsAccepted" type="checkbox" required /><span>I accept the <a href="/account-terms.html" target="_blank" rel="noopener">account and membership terms</a>.</span></label>
+<button class="primary" type="submit">Create my account</button></form></section></main></body></html>
